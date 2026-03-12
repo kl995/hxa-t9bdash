@@ -220,7 +220,7 @@ function handleMR(payload, usernameMap, now) {
 
   // Upsert task
   db.upsertTask({
-    id: `mr:${mr.id}`,
+    id: `mr-${mr.project_id || payload.project?.id}-${mr.iid}`,
     type: 'mr',
     title: mr.title || '',
     state: mr.state === 'merged' ? 'merged' : mr.state === 'closed' ? 'closed' : 'opened',
@@ -273,7 +273,7 @@ function handleIssue(payload, usernameMap, now) {
   const assignees = (issue.assignees || []).map(a => resolveAgent(a.username, usernameMap)).filter(Boolean);
 
   db.upsertTask({
-    id: `issue:${issue.id}`,
+    id: `issue-${issue.project_id || payload.project?.id}-${issue.iid}`,
     type: 'issue',
     title: issue.title || '',
     state: issue.state === 'closed' ? 'closed' : 'opened',
