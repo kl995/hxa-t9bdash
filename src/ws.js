@@ -2,13 +2,25 @@ const { WebSocketServer } = require('ws');
 
 let wss = null;
 const clients = new Set();
+let snapshotProvider = null;
 
-function init(server) {
+function init(server, getSnapshot) {
+  snapshotProvider = getSnapshot;
   wss = new WebSocketServer({ server, path: '/ws' });
 
   wss.on('connection', (ws) => {
     clients.add(ws);
     console.log(`[WS] Client connected (${clients.size} total)`);
+
+    // Send current snapshot to new client
+    if (snapshotProvider) {
+      try {
+        const snapshot = snapshotProvider();
+        ws.send(JSON.stringify({ type: 'snapshot', data: snapshot, ts: Date.now() }));
+      } catch (err) {
+        console.error('[WS] Snapshot error:', err.message);
+      }
+    }
 
     ws.on('close', () => {
       clients.delete(ws);

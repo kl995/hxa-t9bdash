@@ -54,8 +54,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Init WebSocket
-ws.init(server);
+// Init WebSocket with snapshot provider
+ws.init(server, () => ({
+  team: db.getAllAgents(),
+  board: db.getTasksByState(),
+  timeline: db.getTimeline(50),
+  graph: collab.getGraph()
+}));
 
 // Data polling engine
 let isPolling = false;
