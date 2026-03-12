@@ -42,11 +42,15 @@ async function fetchAgents() {
       // Ensure entity exists for this Connect bot
       entity.ensureFromConnect(bot.name);
 
+      // Use entity meta as fallback for missing role/bio
+      const ent = entity.get(bot.name);
+      const entMeta = ent?.meta || {};
+
       const prev = db.getAgent(bot.name);
       const agent = {
         name: bot.name,
-        role: bot.role || '',
-        bio: bot.bio || '',
+        role: bot.role || entMeta.role || '',
+        bio: bot.bio || entMeta.bio || '',
         tags: JSON.stringify(bot.tags || []),
         online: bot.online ? 1 : 0,
         last_seen_at: bot.last_seen_at ? new Date(bot.last_seen_at).getTime() : null,
