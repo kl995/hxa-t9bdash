@@ -65,7 +65,9 @@ function loadFromConfig(entityConfigs) {
   if (!Array.isArray(entityConfigs)) return;
   for (const cfg of entityConfigs) {
     register(cfg.id, cfg.identities || {}, {
-      display_name: cfg.display_name || cfg.id
+      display_name: cfg.display_name || cfg.id,
+      role: cfg.role || '',
+      bio: cfg.bio || ''
     });
   }
 }
