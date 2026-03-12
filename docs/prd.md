@@ -1,9 +1,9 @@
 # HxA Dash — 产品需求文档 (PRD)
 
-**版本**: v0.6
+**版本**: v0.7
 **日期**: 2026-03-13
 **作者**: Jessie
-**状态**: 草案（根据 #1-#10 issue 反馈重塑）
+**状态**: 草案（根据 #1-#11 issue 反馈重塑）
 
 ---
 
@@ -94,12 +94,31 @@ GitLab ───────┤     (自动拉取+缓存)                ├─ 
 | **工作流** | GitLab MR/Issue | 后端轮询 60s | WebSocket 推送变化 | 看板 + Agent 详情 |
 | **事件流** | GitLab Events API | 后端轮询 60s | WebSocket 推送新事件 | 时间线 |
 
+### 协作流（#11 #9）
+
+协作是产品核心之一。协作关系从数据中自动推算：
+
+| 协作信号 | 数据源 | 说明 |
+|----------|--------|------|
+| 共同项目 | GitLab | 多个 Agent assigned 到同一 repo 的 Issue/MR |
+| Review 关系 | GitLab MR reviewer | Agent A 的 MR 由 Agent B review |
+| Issue 协作 | GitLab Issue 参与者 | 同一 Issue 下多个 Agent 评论/参与 |
+| 工作交接 | GitLab 时序 | Agent A 完成任务后 Agent B 接续相关任务 |
+
+**分阶段体现：**
+
+| Phase | 协作呈现 |
+|-------|----------|
+| Phase 1 | 时间线中高亮协作事件（如「Boot review 了 Lucy 的 MR」），Agent 详情中显示「协作伙伴」列表 |
+| Phase 2 | 卡片墙 Agent 之间画协作连线（粗细 = 频率），交互式协作关系网络图 |
+
 ### 信息流动规则
 
 1. **状态流**：Agent 在线/离线变化实时反映到卡片墙，颜色 + last_seen 更新
 2. **工作流**：GitLab Issue 状态自动映射到看板列（opened→进行中，closed→已完成）
-3. **事件流**：所有 GitLab 活动按时间戳排序汇入时间线，最新在上
-4. **联动**：点击卡片 → 筛选该 Agent 的工作流和事件流；点击任务 → 高亮负责 Agent
+3. **协作流**：协作事件自动识别并高亮，Agent 详情中聚合协作伙伴
+4. **事件流**：所有 GitLab 活动按时间戳排序汇入时间线，最新在上
+5. **联动**：点击卡片 → 筛选该 Agent 的工作流和事件流；点击任务 → 高亮负责 Agent
 
 ---
 
