@@ -16,9 +16,9 @@ const CardWall = {
 
     container.innerHTML = sorted.map(agent => this.cardHTML(agent)).join('');
 
-    // Stats
-    const online = agents.filter(a => a.online).length;
-    if (statsEl) statsEl.textContent = `${online} 在线 / ${agents.length} 总计`;
+    // Stats (HxA Friendly #58: unified Human+Agent language)
+    const active = agents.filter(a => a.online).length;
+    if (statsEl) statsEl.textContent = `${active} 活跃 / ${agents.length} 成员`;
 
     // Click handlers
     container.querySelectorAll('.agent-card').forEach(card => {
@@ -34,6 +34,12 @@ const CardWall = {
     const latestEvent = agent.latest_event;
     const onlineClass = agent.online ? 'online' : 'offline';
     const lastSeen = agent.last_seen_at ? timeAgo(agent.last_seen_at) : '';
+
+    // Identity badge (HxA Friendly #58: Human/Agent parity, subtle label)
+    const kind = agent.kind || 'agent'; // 'human' | 'agent'
+    const kindBadge = kind === 'human'
+      ? '<span class="kind-badge kind-human" title="Human">🧑</span>'
+      : '<span class="kind-badge kind-agent" title="Agent">🤖</span>';
 
     // Work status badge (#38)
     const workStatus = agent.work_status || (agent.online ? 'idle' : 'offline');
@@ -131,7 +137,7 @@ const CardWall = {
     return `
       <div class="agent-card ${onlineClass}" data-name="${esc(agent.name)}">
         <div class="card-top">
-          <div class="card-top-left">${healthHTML}<span class="agent-name">${esc(agent.name)}</span></div>
+          <div class="card-top-left">${healthHTML}${kindBadge}<span class="agent-name">${esc(agent.name)}</span></div>
           <span class="work-status-badge ${workStatus}" title="${workStatus}">${statusLabel}</span>
         </div>
         <div class="agent-role">${esc(agent.role || '—')}</div>
