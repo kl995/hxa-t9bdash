@@ -252,6 +252,9 @@ router.post('/claim', async (req, res) => {
   const { task_id, agent } = req.body || {};
   if (!task_id || !agent) return res.status(400).json({ error: 'task_id and agent are required' });
 
+  const entity = require('../entity');
+  if (!entity.get(agent)) return res.status(400).json({ error: `Unknown agent: ${agent}` });
+
   const task = db.getTask(task_id);
   if (!task) return res.status(404).json({ error: `Task not found: ${task_id}` });
   if (task.type !== 'issue') return res.status(400).json({ error: 'Only issues can be claimed' });
