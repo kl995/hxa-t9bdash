@@ -52,6 +52,7 @@ async function fetchAgents() {
         role: bot.role || entMeta.role || '',
         bio: bot.bio || entMeta.bio || '',
         tags: JSON.stringify(bot.tags || []),
+        kind: entMeta.kind || 'agent', // HxA Friendly #58: 'human' | 'agent'
         online: bot.online ? 1 : 0,
         last_seen_at: bot.last_seen_at ? new Date(bot.last_seen_at).getTime() : null,
         updated_at: now

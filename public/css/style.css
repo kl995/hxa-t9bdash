@@ -872,3 +872,7 @@ main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
 .workload-bar-val { font-size: 12px; color: var(--text-secondary); min-width: 20px; }
 .workload-total { font-weight: 500; color: var(--text-primary); }
 .workload-loading, .workload-empty { text-align: center; color: var(--text-secondary); padding: 24px; }
+
+/* HxA Friendly Identity Badges (#58) */
+.kind-badge { font-size: 12px; margin-right: 2px; opacity: 0.7; }
+.kind-badge:hover { opacity: 1; }
