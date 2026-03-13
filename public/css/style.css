@@ -902,6 +902,140 @@ main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
 .sug-link:hover { text-decoration: underline; }
 .sug-reason { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
+/* === Team Utilization & Output Metrics (#62) === */
+.metrics-panel { display: flex; flex-direction: column; gap: 14px; }
+
+/* Summary cards */
+.metrics-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.metrics-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: center;
+}
+.metrics-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
+.metrics-card-unit { font-size: 16px; font-weight: 500; }
+.metrics-card-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+/* Agent table */
+.metrics-table-wrap { overflow-x: auto; }
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.metrics-table th {
+  text-align: left;
+  padding: 7px 12px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.metrics-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  vertical-align: middle;
+}
+.metrics-table tr:hover td { background: rgba(255,255,255,.03); }
+.metrics-agent-name { font-weight: 500; }
+.metrics-num { text-align: right; font-variant-numeric: tabular-nums; }
+.metrics-empty { text-align: center; color: var(--text-secondary); padding: 18px; }
+
+/* Weekly trend bar chart */
+.metrics-trend-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+}
+.metrics-trend-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.metrics-trend-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+.metrics-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 2px;
+}
+.dot-issue { background: var(--green); }
+.dot-mr    { background: var(--accent); }
+
+.metrics-trend-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 80px;
+}
+.metrics-trend-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+.metrics-trend-bars {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 100%;
+  min-height: 0;
+}
+.metrics-trend-bar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: height .4s ease;
+}
+.bar-issue { background: var(--green); }
+.bar-mr    { background: var(--accent); }
+.metrics-trend-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.metrics-trend-nums {
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: .7;
+}
+
 /* Progress bar (#43) */
 #progress-bar {
   position: fixed; top: 0; left: 0; z-index: 9999;

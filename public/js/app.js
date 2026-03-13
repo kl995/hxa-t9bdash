@@ -94,6 +94,7 @@ const App = {
     Blockers.init();
     WorkloadReport.init();
     Suggestions.init();
+    Metrics.init();
 
     // Workload report: sortable headers + export
     document.querySelectorAll('.workload-table thead .sortable').forEach(th => {
