@@ -21,6 +21,8 @@ const WorkloadReport = {
   async fetch() {
     const el = document.getElementById('workload-table-body');
     if (el) el.innerHTML = '<tr><td colspan="6" class="workload-loading">加载中…</td></tr>';
+    const label = document.getElementById('workload-period-label');
+    if (label) label.textContent = `过去 ${this._days} 天`;
     try {
       const res = await fetch(`${BASE}/api/stats/workload?days=${this._days}`);
       if (!res.ok) throw new Error('fetch failed');
