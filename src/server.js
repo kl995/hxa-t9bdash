@@ -21,6 +21,7 @@ const myRoutes = require('./routes/my');
 const blockersRoutes = require('./routes/blockers');
 const autoAssignRoutes = require('./routes/auto-assign');
 const autoAssignEngine = require('./auto-assign-engine');
+const metricsRoutes = require('./routes/metrics');
 
 const PORT = process.env.PORT || 3479;
 
@@ -71,6 +72,7 @@ app.use('/api/trends', trendsRoutes);
 app.use('/api/my', myRoutes);
 app.use('/api/blockers', blockersRoutes);
 app.use('/api/auto-assign', autoAssignRoutes);
+app.use('/api/metrics', metricsRoutes);
 app.use('/api', reportRoutes.router);
 
 // Graph endpoint (supports ?project= filter)
