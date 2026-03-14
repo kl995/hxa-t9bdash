@@ -3,7 +3,6 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const db = require('../db');
-const entity = require('../entity');
 
 let webhookSecret = null;
 let wsRef = null;
@@ -48,16 +47,18 @@ function parseDependencies(description) {
   return [...deps];
 }
 
-// Find downstream issues that depend on the given issue IID within a project
+// Find downstream issues that depend on the given issue IID within the same project
 function findDownstreamIssues(closedProjectId, closedIid) {
   const allTasks = db.getAllTasks();
   const downstream = [];
 
   for (const task of allTasks) {
     if (task.type !== 'issue' || task.state !== 'opened') continue;
+    // Only match within same project to avoid cross-project IID collisions
+    if (task.project_id !== closedProjectId) continue;
 
     const deps = parseDependencies(task.description);
-    if (deps.includes(closedIid)) {
+    if (deps.length > 0 && deps.includes(closedIid)) {
       downstream.push({ task, deps });
     }
   }
@@ -65,17 +66,19 @@ function findDownstreamIssues(closedProjectId, closedIid) {
   return downstream;
 }
 
-// Check if all dependencies of an issue are closed
-function allDepsClosed(deps) {
+// Check if all dependencies of an issue are closed (same project scope)
+function allDepsClosed(deps, projectId) {
   const allTasks = db.getAllTasks();
+  // Build lookup: iid -> task (scoped to same project)
   const taskByIid = new Map();
   for (const t of allTasks) {
-    if (t.type === 'issue' && t.iid) {
+    if (t.type === 'issue' && t.iid && t.project_id === projectId) {
       taskByIid.set(t.iid, t);
     }
   }
 
   for (const depIid of deps) {
+    if (depIid === 0) continue; // skip zero IID
     const depTask = taskByIid.get(depIid);
     if (!depTask || depTask.state !== 'closed') return false;
   }
@@ -109,7 +112,7 @@ router.post('/gitlab', (req, res) => {
   const unblocked = [];
 
   for (const { task, deps } of downstream) {
-    if (allDepsClosed(deps)) {
+    if (allDepsClosed(deps, task.project_id)) {
       unblocked.push(task);
 
       // Create timeline event for the unblock
