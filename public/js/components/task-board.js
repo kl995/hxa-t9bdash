@@ -3,6 +3,18 @@ const TaskBoard = {
   // Track previous state for change detection
   _prevCounts: {},
 
+  _ESTIMATE_INFO: {
+    S:  { sessions: 0.5, minutes: 20,  label: '~20 min' },
+    M:  { sessions: 1,   minutes: 45,  label: '~45 min' },
+    L:  { sessions: 2,   minutes: 90,  label: '~90 min' },
+    XL: { sessions: 4,   minutes: 180, label: '~3 hrs' },
+  },
+
+  _estimateTooltip(est) {
+    const info = this._ESTIMATE_INFO[est];
+    return info ? `${est}: ${info.sessions} session(s), ${info.label}` : est;
+  },
+
   init() {},
 
   // Render to a specific page prefix (overview or tasks)
@@ -51,9 +63,13 @@ const TaskBoard = {
       const isDone = colType === 'done' && isNew;
       const extraClass = isDone ? ' task-done-flash' : '';
       const delay = `animation-delay: ${i * 30}ms;`;
+      const estimateBadge = t.estimate
+        ? `<span class="estimate-badge estimate-${esc(t.estimate.toLowerCase())}" title="${TaskBoard._estimateTooltip(t.estimate)}">${esc(t.estimate)}</span>`
+        : '';
       return `
         <div class="task-card task-type-${esc(t.type)}${extraClass}" data-task-id="${esc(String(t.id))}" style="${delay}">
           <div class="task-title">
+            ${estimateBadge}
             <a href="${esc(t.url)}" target="_blank" style="color: var(--text); text-decoration: none;">
               ${esc(truncate(t.title, 60))}
             </a>

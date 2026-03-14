@@ -12,7 +12,11 @@ function buildBoard() {
   const board = db.getTasksByState();
   const result = {};
   for (const col of ['todo', 'doing', 'done']) {
-    result[col] = board[col].map(t => ({ ...t, labels: safeJSON(t.labels) }));
+    result[col] = board[col].map(t => ({
+      ...t,
+      labels: safeJSON(t.labels),
+      estimate: t.estimate || null,
+    }));
   }
   return result;
 }

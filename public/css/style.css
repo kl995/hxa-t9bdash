@@ -1379,3 +1379,84 @@ main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
   text-align: center; padding: 20px; color: var(--text-secondary); font-size: 13px;
 }
 .myview-ok { color: var(--green); }
+
+/* ── Session Estimate Badges (#80) ─────────────────────────── */
+.estimate-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 4px;
+  vertical-align: middle;
+  letter-spacing: 0.5px;
+}
+.estimate-s  { background: #1a472a; color: #3fb950; }
+.estimate-m  { background: #3b2e00; color: #d29922; }
+.estimate-l  { background: #4a1d1d; color: #f85149; }
+.estimate-xl { background: #2d1f4e; color: #bc8cff; }
+
+/* ── Velocity Section (#80) ──────────────────────────────────── */
+.metrics-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 16px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.velocity-card {
+  border-left: 3px solid var(--accent);
+}
+
+/* ── Estimate Distribution Bar (#80) ─────────────────────────── */
+.estimate-dist-section {
+  margin: 12px 0;
+}
+.estimate-dist-title {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.estimate-dist-bar {
+  display: flex;
+  height: 24px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255,255,255,.05);
+}
+.estimate-dist-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 0;
+  transition: width .3s ease;
+}
+.estimate-dist-s  { background: #1a472a; color: #3fb950; }
+.estimate-dist-m  { background: #3b2e00; color: #d29922; }
+.estimate-dist-l  { background: #4a1d1d; color: #f85149; }
+.estimate-dist-xl { background: #2d1f4e; color: #bc8cff; }
+.estimate-dist-none { background: rgba(255,255,255,.08); color: var(--text-secondary); }
+
+.estimate-dist-legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.estimate-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+.estimate-dot.estimate-s  { background: #3fb950; }
+.estimate-dot.estimate-m  { background: #d29922; }
+.estimate-dot.estimate-l  { background: #f85149; }
+.estimate-dot.estimate-xl { background: #bc8cff; }
+.estimate-dot.estimate-none { background: rgba(255,255,255,.2); }

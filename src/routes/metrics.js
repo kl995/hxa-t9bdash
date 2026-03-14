@@ -128,5 +128,31 @@ router.get('/', (req, res) => {
   res.json(computeMetrics());
 });
 
+// GET /api/metrics/velocity — session-based team velocity
+router.get('/velocity', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 7, 90);
+  const velocity = db.getSessionVelocity(days);
+  const summary = db.getSessionSummary();
+
+  // Team-wide velocity
+  const totalSessions = velocity.reduce((s, v) => s + v.total_sessions, 0);
+  const activeAgents = velocity.length;
+
+  res.json({
+    window_days: days,
+    team: {
+      total_sessions: totalSessions,
+      sessions_per_day: activeAgents > 0 ? Math.round((totalSessions / days) * 100) / 100 : 0,
+      active_agents: activeAgents,
+    },
+    agents: velocity,
+    summary,
+    estimate_map: {
+      sessions: db.ESTIMATE_SESSIONS,
+      minutes: db.ESTIMATE_MINUTES,
+    },
+  });
+});
+
 module.exports = router;
 module.exports.computeMetrics = computeMetrics;

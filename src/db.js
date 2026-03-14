@@ -332,6 +332,67 @@ const getUnassignedIssues = () => {
     .sort((a, b) => b.created_at - a.created_at);
 };
 
+// Session estimate → session count mapping
+const ESTIMATE_SESSIONS = { S: 0.5, M: 1, L: 2, XL: 4 };
+
+// Session estimate → human-readable minutes mapping
+const ESTIMATE_MINUTES = { S: 20, M: 45, L: 90, XL: 180 };
+
+// Get session velocity: sessions completed per day per agent (rolling window)
+const getSessionVelocity = (days = 7) => {
+  const sinceMs = Date.now() - days * 86400000;
+  const closedTasks = [...store.tasks.values()].filter(t =>
+    (t.state === 'closed' || t.state === 'merged') &&
+    t.updated_at >= sinceMs &&
+    t.estimate
+  );
+
+  const agentSessions = new Map();
+  for (const t of closedTasks) {
+    const agent = t.assignee || t.author;
+    if (!agent) continue;
+    const sessions = ESTIMATE_SESSIONS[t.estimate] || 0;
+    agentSessions.set(agent, (agentSessions.get(agent) || 0) + sessions);
+  }
+
+  const result = [];
+  for (const [name, totalSessions] of agentSessions) {
+    result.push({
+      name,
+      total_sessions: totalSessions,
+      sessions_per_day: Math.round((totalSessions / days) * 100) / 100,
+    });
+  }
+
+  return result.sort((a, b) => b.sessions_per_day - a.sessions_per_day);
+};
+
+// Get session summary for all tasks (estimate distribution)
+const getSessionSummary = () => {
+  const tasks = [...store.tasks.values()];
+  const open = tasks.filter(t => t.state === 'opened');
+  const closed = tasks.filter(t => t.state === 'closed' || t.state === 'merged');
+
+  const countByEstimate = (list) => {
+    const counts = { S: 0, M: 0, L: 0, XL: 0, unestimated: 0 };
+    for (const t of list) {
+      if (t.estimate && counts[t.estimate] !== undefined) counts[t.estimate]++;
+      else counts.unestimated++;
+    }
+    return counts;
+  };
+
+  const openSessions = open.reduce((s, t) => s + (ESTIMATE_SESSIONS[t.estimate] || 0), 0);
+  const openMinutes = open.reduce((s, t) => s + (ESTIMATE_MINUTES[t.estimate] || 0), 0);
+
+  return {
+    open: countByEstimate(open),
+    closed: countByEstimate(closed),
+    open_total_sessions: openSessions,
+    open_estimated_minutes: openMinutes,
+  };
+};
+
 module.exports = {
   upsertAgent, getAllAgents, getAgent, removeAgent,
   upsertTask, getTasksByState, getTasksForAgent, getAllTasks, getTask,
@@ -343,4 +404,6 @@ module.exports = {
   getWorkloadReport,
   logAutoAssign, getAutoAssignHistory,
   getUnassignedIssues,
+  getSessionVelocity, getSessionSummary,
+  ESTIMATE_SESSIONS, ESTIMATE_MINUTES,
 };

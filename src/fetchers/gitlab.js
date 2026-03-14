@@ -54,6 +54,18 @@ function normalizeGitLabAction(actionName) {
   }
 }
 
+// Parse session estimate from GitLab labels (estimate::S, estimate::M, estimate::L, estimate::XL)
+function parseEstimateLabel(labels) {
+  for (const label of labels) {
+    const match = label.match(/^estimate::(\w+)$/i);
+    if (match) {
+      const size = match[1].toUpperCase();
+      if (['S', 'M', 'L', 'XL'].includes(size)) return size;
+    }
+  }
+  return null;
+}
+
 async function fetchIssues() {
   try {
     const issues = await apiFetch(`/groups/${config.group_id}/issues?state=all&per_page=100&order_by=updated_at&sort=desc`);
@@ -74,6 +86,7 @@ async function fetchIssues() {
         reviewer: null,
         url: issue.web_url,
         labels: JSON.stringify(issue.labels || []),
+        estimate: parseEstimateLabel(issue.labels || []),
         created_at: new Date(issue.created_at).getTime(),
         updated_at: new Date(issue.updated_at).getTime()
       };
@@ -106,6 +119,7 @@ async function fetchMRs() {
         reviewer: reviewers.join(',') || null,
         url: mr.web_url,
         labels: JSON.stringify(mr.labels || []),
+        estimate: parseEstimateLabel(mr.labels || []),
         created_at: new Date(mr.created_at).getTime(),
         updated_at: new Date(mr.updated_at).getTime()
       };
