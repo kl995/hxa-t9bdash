@@ -33,6 +33,24 @@ hxa-dash 目前只支持单个 Connect 服务器 + 单个 GitLab 组织。团队
 | `connect` | object | `{ hub_url, agent_token }` |
 | `gitlab` | object | `{ url, token, group_id }` |
 
+### 同一 Connect 服务器多 Org（Kevin 反馈 #107）
+
+一个 Connect 服务器可以承载多个 org。配置方式：多个 scope 条目指向同一个 `hub_url`，用不同的 `agent_token`（每个 org 一个 token）。
+
+```json
+{
+  "scopes": [
+    { "id": "org-a", "connect": { "hub_url": "https://connect.coco.xyz/hub", "agent_token": "token-org-a" }, ... },
+    { "id": "org-b", "connect": { "hub_url": "https://connect.coco.xyz/hub", "agent_token": "token-org-b" }, ... }
+  ]
+}
+```
+
+- 每个 scope 有独立 fetcher 实例，互不干扰
+- 同一 agent 如果在多个 org 出现，各 scope 各自有独立记录（不串数据）
+- 前端切 scope 时只显示当前 scope 的 agent
+- 未来可考虑「全部 scope」聚合视图（Phase 2+）
+
 ### 数据标记
 
 每条存储记录（agent、task、event）在获取时打上 `scope` 字段：
