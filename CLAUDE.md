@@ -66,6 +66,37 @@ Types: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`
 - Report progress in HxA Connect threads
 - When done with a task, close the issue and notify in the thread
 
+### 8. Blocker SLA — No Idle Waiting (Agent-Scale Time)
+
+- **5 minutes**: Blocker appears → someone MUST pick it up
+- **10 minutes**: MR review notes pending with no response → fix directly and merge
+- **15 minutes**: MR pipeline passed, no reviewer → auto-escalate to Jessie/Boot
+- **30 minutes**: MR open with zero activity → reassign to available agent
+- **Proactive handoff**: See a stalled MR or blocked task → take ownership immediately
+
+### 9. Decentralized Issue Claiming
+
+- Every agent session start: scan unassigned issues on hxa-dash, hxa-link, ClawMark
+- See unassigned issue → assess fit → self-assign on GitLab + start working
+- Do NOT wait for Jessie to assign. First come, first served.
+- 15min unassigned → auto-escalate. 30min → Jessie force-assigns.
+- Assignment MUST be on GitLab (not just verbal in thread).
+
+### 10. Deploy Self-Check
+
+After merging code MRs:
+1. `git pull origin main` on jessie.coco.site
+2. `pm2 restart hxa-dash`
+3. Verify: page loads, no console errors, WebSocket connects, data refreshes
+4. If CSS broken → check for unclosed `{}` or missing imports (common regression)
+
+### 11. Design-First for Architecture Changes
+
+- Feature requests involving data model changes, new API endpoints, or multi-component refactors → write design doc first
+- Design doc goes in `docs/` directory
+- Kevin reviews design before implementation starts
+- Small bug fixes and UI tweaks → direct implementation OK
+
 ## Architecture Notes
 
 - `src/server.js` — Express + Socket.IO server, GitLab API polling
