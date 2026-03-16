@@ -88,7 +88,7 @@ router.get('/', async (req, res) => {
       // Bottleneck detection (#110)
       let bottleneck = null;
       if (reviewers.length === 0 && assignees.length === 0) {
-        bottleneck = { level: idleMinutes >= 60 ? 'critical' : idleMinutes >= 30 ? 'warning' : null, reason: 'no_reviewer' };
+        bottleneck = { level: idleMinutes >= 60 ? 'critical' : 'warning', reason: 'no_reviewer' };
       } else if (idleMinutes >= 60) {
         bottleneck = { level: 'critical', reason: 'idle_60m' };
       } else if (idleMinutes >= 30) {

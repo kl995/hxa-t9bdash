@@ -4,7 +4,15 @@ const MRBoard = {
   _refreshTimer: null,
 
   init() {
-    // Auto-refresh every 30s when on this page
+    this.fetch();
+    this._refreshTimer = setInterval(() => this.fetch(), 30000);
+  },
+
+  destroy() {
+    if (this._refreshTimer) {
+      clearInterval(this._refreshTimer);
+      this._refreshTimer = null;
+    }
   },
 
   async fetch() {
