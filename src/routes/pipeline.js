@@ -27,9 +27,21 @@ router.get('/', (req, res) => {
     openTasks = openTasks.filter(t => t.project === projectFilter);
   }
 
+  // Parse dependencies once per task and build reverse lookup
+  const parsedDepsMap = new Map(); // task id → parsed iid[]
+  const downstreamMap = new Map(); // iid → downstream iid[]
+  for (const t of openTasks) {
+    const deps = parseDependencies(t.description);
+    parsedDepsMap.set(t.id, deps);
+    for (const depIid of deps) {
+      if (!downstreamMap.has(depIid)) downstreamMap.set(depIid, []);
+      downstreamMap.get(depIid).push(t.iid);
+    }
+  }
+
   // Enrich each task with dependency info and pipeline stage
   const pipelineTasks = openTasks.map(t => {
-    const deps = parseDependencies(t.description);
+    const deps = parsedDepsMap.get(t.id);
     const depDetails = deps.map(iid => {
       const dep = taskByProjIid.get(`${t.project_id}:${iid}`);
       return {
@@ -40,7 +52,6 @@ router.get('/', (req, res) => {
       };
     });
 
-    const allDepsMet = depDetails.every(d => d.met);
     const hasUnmetDeps = depDetails.some(d => !d.met);
 
     // Determine pipeline stage
@@ -55,15 +66,7 @@ router.get('/', (req, res) => {
       stage = 'ready'; // deps met, no assignee — can be picked up
     }
 
-    // Find downstream tasks that depend on this issue
-    const downstreamIds = [];
-    for (const other of openTasks) {
-      if (other.id === t.id) continue;
-      const otherDeps = parseDependencies(other.description);
-      if (otherDeps.includes(t.iid)) {
-        downstreamIds.push(other.iid);
-      }
-    }
+    const downstreamIds = downstreamMap.get(t.iid) || [];
 
     return {
       id: t.id,
@@ -130,15 +133,12 @@ router.get('/', (req, res) => {
     }
   }
 
-  // Summary counts
-  const summary = {
-    total: pipelineTasks.length,
-    executing: pipelineTasks.filter(t => t.stage === 'executing').length,
-    assigned: pipelineTasks.filter(t => t.stage === 'assigned').length,
-    ready: pipelineTasks.filter(t => t.stage === 'ready').length,
-    blocked: pipelineTasks.filter(t => t.stage === 'blocked').length,
-    critical: pipelineTasks.filter(t => t.isCritical).length
-  };
+  // Summary counts (single pass)
+  const summary = { total: pipelineTasks.length, executing: 0, assigned: 0, ready: 0, blocked: 0, critical: 0 };
+  for (const t of pipelineTasks) {
+    summary[t.stage] = (summary[t.stage] || 0) + 1;
+    if (t.isCritical) summary.critical++;
+  }
 
   res.json({ tasks: pipelineTasks, edges, summary, timestamp: now });
 });
