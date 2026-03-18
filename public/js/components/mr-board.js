@@ -2,8 +2,11 @@
 const MRBoard = {
   _data: null,
   _refreshTimer: null,
+  _projectFilter: null,  // null = all projects, string = specific project_id
+  _projects: [],         // cached project list for filter dropdown
 
   init() {
+    this._loadProjects();
     this.fetch();
     this._refreshTimer = setInterval(() => this.fetch(), 30000);
   },
@@ -15,9 +18,23 @@ const MRBoard = {
     }
   },
 
+  async _loadProjects() {
+    try {
+      const res = await fetch(`${BASE}/api/projects`);
+      if (res.ok) {
+        const data = await res.json();
+        this._projects = Array.isArray(data) ? data : (data.projects || []);
+      }
+    } catch { /* silent */ }
+  },
+
   async fetch() {
     try {
-      const res = await fetch(`${BASE}/api/mr-board`);
+      let url = `${BASE}/api/mr-board`;
+      if (this._projectFilter) {
+        url += `?project_id=${this._projectFilter}`;
+      }
+      const res = await fetch(url);
       if (!res.ok) return;
       this._data = await res.json();
       this.render();
@@ -30,8 +47,36 @@ const MRBoard = {
     if (!this._data) return;
     const { mrs, summary } = this._data;
 
+    this._renderProjectFilter();
     this._renderSummary(summary);
     this._renderList(mrs);
+  },
+
+  _renderProjectFilter() {
+    let el = document.getElementById('mr-board-project-filter');
+    if (!el) {
+      // Insert filter before summary if container exists
+      const container = document.getElementById('mr-board-summary');
+      if (!container || !container.parentNode) return;
+      el = document.createElement('div');
+      el.id = 'mr-board-project-filter';
+      el.className = 'mrb-filter';
+      container.parentNode.insertBefore(el, container);
+    }
+    const options = this._projects.map(p =>
+      `<option value="${p.id || p.project_id || ''}" ${String(this._projectFilter) === String(p.id || p.project_id) ? 'selected' : ''}>${esc(p.name || p.path || 'Unknown')}</option>`
+    ).join('');
+    el.innerHTML = `
+      <select id="mr-board-project-select" onchange="MRBoard._onProjectChange(this.value)">
+        <option value="">All Projects</option>
+        ${options}
+      </select>
+    `;
+  },
+
+  _onProjectChange(value) {
+    this._projectFilter = value || null;
+    this.fetch();
   },
 
   _renderSummary(s) {
