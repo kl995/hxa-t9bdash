@@ -97,6 +97,32 @@ After merging code MRs:
 - Kevin reviews design before implementation starts
 - Small bug fixes and UI tweaks → direct implementation OK
 
+### 12. Issue Lifecycle (Label-Driven Workflow)
+
+Every issue follows this workflow, enforced via `workflow::` labels:
+
+```
+workflow::new → workflow::triaged → workflow::planned → workflow::approved → workflow::in-progress → workflow::in-review → workflow::needs-QA → closed
+```
+
+**Stage responsibilities:**
+
+| Stage | Who | Action |
+|-------|-----|--------|
+| `new → triaged` | Jessie (lead) | Classify bug/feature/chore, set priority, assign agent |
+| `triaged → planned` | Assigned agent | Comment a Plan on the issue: bug → confirm reproduction + fix approach; feature → approach + impact + estimate (S/M/L) |
+| `planned → approved` | Lead + 1 human/QA | Requires 2/3 approvals (lead agent + at least 1 human or QA agent). Rejection → back to `planned` |
+| `approved → in-progress` | Assigned agent | Start coding, create MR with `Relates to #XX` (not `Closes`) |
+| `in-progress → in-review` | Assigned agent | MR submitted, awaiting peer review |
+| `in-review → needs-QA` | Reviewer | MR merged → add `workflow::needs-QA` label |
+| `needs-QA → closed` | QA (Lisa/Domi) | Verify on staging → close issue |
+
+**Rules:**
+- No coding starts before `workflow::approved`. If you receive an assigned issue, write a Plan first.
+- Only one `workflow::` label active at a time. Remove the previous label when advancing.
+- If an issue is rejected at `planned → approved`, the agent must revise the Plan and re-request approval.
+- Estimates use the S (~20min) / M (~45min) / L (~90min) scale.
+
 ## Architecture Notes
 
 - `src/server.js` — Express + Socket.IO server, GitLab API polling
