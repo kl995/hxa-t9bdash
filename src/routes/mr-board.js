@@ -42,6 +42,8 @@ function mapUsername(gitlabUsername) {
 }
 
 // GET /api/mr-board — live MR pipeline board with bottleneck alerts
+// Query params:
+//   project_id - filter MRs to a specific GitLab project (recommended)
 router.get('/', async (req, res) => {
   if (!gitlabConfig || !apiFetchFn) {
     return res.status(503).json({ error: 'GitLab not configured' });
@@ -53,9 +55,16 @@ router.get('/', async (req, res) => {
     const agentMap = new Map(agents.map(a => [a.name, a]));
 
     // Fetch open MRs from GitLab (live, not cached)
-    const mrs = await apiFetchFn(
-      `/groups/${gitlabConfig.group_id}/merge_requests?state=opened&per_page=50&order_by=updated_at&sort=desc`
-    );
+    let mrEndpoint = `/groups/${gitlabConfig.group_id}/merge_requests?state=opened&per_page=50&order_by=updated_at&sort=desc`;
+
+    // Filter by project_id if provided — prevents cross-project MR mixing
+    const projectIdFilter = req.query.project_id;
+    if (projectIdFilter) {
+      // Use project-level endpoint instead of group-level
+      mrEndpoint = `/projects/${projectIdFilter}/merge_requests?state=opened&per_page=50&order_by=updated_at&sort=desc`;
+    }
+
+    const mrs = await apiFetchFn(mrEndpoint);
 
     // Fetch pipeline status for each MR in parallel
     const enriched = await Promise.all(mrs.map(async (mr) => {
