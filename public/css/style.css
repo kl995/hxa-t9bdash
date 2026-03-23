@@ -2559,7 +2559,9 @@ main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
   padding: 32px;
 }
 .about-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-.about-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+.about-subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+.about-section-title { font-size: 13px; font-weight: 600; color: var(--accent); margin: 20px 0 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.about-section-title:first-of-type { margin-top: 0; }
 .about-info { display: flex; flex-direction: column; gap: 12px; }
 .about-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .about-row:last-child { border-bottom: none; }

@@ -925,14 +925,21 @@ const App = {
   },
 
   // --- #50: Auto-refresh countdown (30s) ---
-  // --- #108: About page ---
+  // --- #108, #133: About / Version info page ---
   async loadAbout() {
     try {
       const res = await fetch(`${BASE}/api/about`);
       if (!res.ok) return;
       const info = await res.json();
       const el = (id) => document.getElementById(id);
-      if (el('about-version')) el('about-version').textContent = info.version || '-';
+      // Client info — same version/commit as server since no separate build step
+      if (el('about-client-version')) el('about-client-version').textContent = info.version || '-';
+      if (el('about-client-commit')) el('about-client-commit').textContent = info.commit || '-';
+      if (el('about-client-build')) el('about-client-build').textContent = info.buildTime ? new Date(info.buildTime).toLocaleString() : '-';
+      // Server info
+      if (el('about-server-version')) el('about-server-version').textContent = info.version || '-';
+      if (el('about-server-commit')) el('about-server-commit').textContent = info.commit || '-';
+      if (el('about-server-build')) el('about-server-build').textContent = info.buildTime ? new Date(info.buildTime).toLocaleString() : '-';
       if (el('about-uptime')) el('about-uptime').textContent = info.uptime || '-';
       if (el('about-node')) el('about-node').textContent = info.node || '-';
       if (el('about-scopes')) el('about-scopes').textContent = info.scopes || '-';
