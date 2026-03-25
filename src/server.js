@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 const db = require('./db');
 const ws = require('./ws');
@@ -138,9 +139,14 @@ app.get('/api/health-watchdog/alerts', (req, res) => {
 });
 app.use('/api', reportRoutes.router);
 
-// GET /api/about — version and system info (#108)
+// GET /api/about — version and system info (#108, #133)
 const pkg = require('../package.json');
 const SERVER_START = new Date();
+const SERVER_BUILD_TIME = SERVER_START.toISOString();
+const SERVER_COMMIT = (() => {
+  try { return execSync('git rev-parse --short HEAD', { cwd: __dirname, encoding: 'utf-8' }).trim(); }
+  catch { return 'unknown'; }
+})();
 app.get('/api/about', (req, res) => {
   const uptimeSec = Math.floor(process.uptime());
   const h = Math.floor(uptimeSec / 3600);
@@ -149,6 +155,8 @@ app.get('/api/about', (req, res) => {
   const scopeCount = config.scopes?.length || 1;
   res.json({
     version: pkg.version,
+    commit: SERVER_COMMIT,
+    buildTime: SERVER_BUILD_TIME,
     uptime: `${uptime} (since ${SERVER_START.toISOString().slice(0, 16).replace('T', ' ')})`,
     node: process.version,
     scopes: `${scopeCount} scope${scopeCount > 1 ? 's' : ''}`,
