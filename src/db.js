@@ -701,7 +701,7 @@ module.exports = {
   insertEvent, getTimeline, getEventsForAgent,
   upsertEdge, clearEdges, getCollabEdges, getCollabsForAgent, getTopCollaborator,
   getProjects,
-  getEventsInWindow, buildTimeline, buildTrends, getAgentStats,
+  getEventsInWindow, getTasksClosedInWindow, buildTimeline, buildTrends, getAgentStats,
   getStaleIssues, getUnreviewedMRs, getStaleMRs, getIdleAgents,
   getBlockingMRsForAgent,
   getWorkloadReport,
