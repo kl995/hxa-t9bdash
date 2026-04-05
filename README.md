@@ -294,4 +294,4 @@ pm2 logs hxa-dash
 
 ## License
 
-See [LICENSE](LICENSE) file.
+MIT License — see [LICENSE](LICENSE) for details.
