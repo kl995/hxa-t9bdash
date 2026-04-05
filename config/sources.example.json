@@ -4,16 +4,29 @@
 
   "scopes": [
     {
-      "org_id": "8375851a-94ec-4efb-bd0d-7ec6d4cab536",
-      "name": "HxA Team K",
-      "hub_url": "https://connect.coco.xyz/hub",
+      "org_id": "YOUR_ORG_UUID",
+      "name": "My Team",
+      "hub_url": "https://your-connect-server.example.com/hub",
       "agent_token": "TOKEN",
-      "gitlab": { "url": "https://git.coco.xyz", "token": "TOKEN", "group_id": 2 }
+      "gitlab": { "url": "https://gitlab.example.com", "token": "TOKEN", "group_id": 1 }
     }
   ],
 
   "_comment_legacy": "Single-scope format (backward compatible, used when scopes array is absent):",
-  "connect": { "hub_url": "https://connect.coco.xyz/hub", "agent_token": "TOKEN" },
-  "gitlab": { "url": "https://git.coco.xyz", "token": "TOKEN", "group_id": 2 },
-  "polling": { "connect_interval_ms": 30000, "gitlab_interval_ms": 60000 }
+  "connect": { "hub_url": "https://your-connect-server.example.com/hub", "agent_token": "TOKEN" },
+  "gitlab": { "url": "https://gitlab.example.com", "token": "TOKEN", "group_id": 1 },
+  "polling": { "connect_interval_ms": 30000, "gitlab_interval_ms": 60000 },
+
+  "_comment_notifications": "Optional: configure notification delivery for watchdog and auto-assign alerts",
+  "notifications": {
+    "script_path": "/path/to/your/notification-script.js",
+    "channel": "your-channel",
+    "target": "your-target-id"
+  },
+
+  "_comment_health_endpoints": "Optional: service endpoints for health diagnostics page",
+  "health_endpoints": [
+    { "name": "HxA Dash", "url": "http://localhost:3479/api/health", "category": "internal" },
+    { "name": "GitLab", "url": "https://gitlab.example.com/api/v4/version", "category": "platform" }
+  ]
 }

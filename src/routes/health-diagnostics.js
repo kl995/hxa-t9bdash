@@ -97,13 +97,16 @@ function probeEndpoint(url, timeoutMs = 5000) {
   });
 }
 
-// Service endpoints to check
-const SERVICE_ENDPOINTS = [
-  { name: 'HxA Dash', url: 'http://localhost:3479/api/health', category: 'internal' },
-  { name: 'GitLab', url: 'https://git.coco.xyz/api/v4/version', category: 'platform' },
-  { name: 'HxA Hub', url: 'https://jessie.coco.site/hub/api/health', category: 'platform' },
-  { name: 'HxA Link', url: 'https://jessie.coco.site/api/health', category: 'platform' },
+// Service endpoints to check — loaded from config or fallback to localhost only
+let SERVICE_ENDPOINTS = [
+  { name: 'HxA Dash', url: `http://localhost:${process.env.PORT || 3479}/api/health`, category: 'internal' },
 ];
+
+function loadEndpoints(config) {
+  if (config && config.health_endpoints) {
+    SERVICE_ENDPOINTS = config.health_endpoints;
+  }
+}
 
 // Get agent health from db (activity + system metrics #115)
 function getAgentHealth() {
@@ -205,6 +208,7 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.loadEndpoints = loadEndpoints;
 module.exports.getSystemHealth = () => {
   const local = getLocalSystem();
   const systemStatuses = [local.memory.status, local.disk.status, local.pm2.status];

@@ -20,17 +20,23 @@ const CORE_TEAM = new Set(['Boot', 'Jessie', 'Lucy', 'Vila', 'Lova', 'Lisa', 'Do
 const lastAlerted = new Map();
 
 let wsModule = null;
+let notifyConfig = null;
 
-function init(ws) {
+function init(ws, config) {
   if (ws) wsModule = ws;
+  if (config && config.notifications) {
+    notifyConfig = config.notifications;
+  }
 }
 
-// Send alert to HxA-Team-K thread
+// Send alert to configured notification channel
 function notify(message) {
-  const threadTarget = 'org:coco|thread:ae51e0c1-275e-4411-9aac-c44d70262725';
-  const scriptPath = '/home/cocoai/zylos/.claude/skills/comm-bridge/scripts/c4-send.js';
+  if (!notifyConfig || !notifyConfig.script_path || !notifyConfig.channel || !notifyConfig.target) {
+    console.log('[HealthWatchdog] Notifications not configured, skipping');
+    return;
+  }
   try {
-    execSync(`node ${scriptPath} "hxa-connect" "${threadTarget}" ${JSON.stringify(message)}`, {
+    execSync(`node ${notifyConfig.script_path} "${notifyConfig.channel}" "${notifyConfig.target}" ${JSON.stringify(message)}`, {
       timeout: 10000,
       stdio: 'ignore',
     });

@@ -16,6 +16,7 @@ const OFFLINE_THRESHOLD_MS = 30 * 60 * 1000; // 30 min without last_seen → tre
 let gitlabConfig = null;
 let gitlabGroupId = null;
 let wsModule = null;
+let notifyConfig = null;
 // Round-robin index for idle agent selection
 let rrIndex = 0;
 // Track previously seen unassigned issue IDs to detect new ones
@@ -25,6 +26,9 @@ function init(config, ws) {
   gitlabConfig = config.gitlab;
   gitlabGroupId = config.gitlab.group_id;
   if (ws) wsModule = ws;
+  if (config.notifications) {
+    notifyConfig = config.notifications;
+  }
 }
 
 // Internal POST to our own route — avoids duplicating GitLab + DB logic
@@ -55,12 +59,14 @@ function callExecute(body) {
   });
 }
 
-// Send HxA Connect notification
+// Send notification to configured channel
 function notify(message) {
-  const threadTarget = 'org:coco|thread:0f5cfd31-291c-4c9e-95d4-6d24b931229f';
-  const scriptPath = '/home/cocoai/zylos/.claude/skills/comm-bridge/scripts/c4-send.js';
+  if (!notifyConfig || !notifyConfig.script_path || !notifyConfig.channel || !notifyConfig.target) {
+    console.log('[AutoAssign] Notifications not configured, skipping');
+    return;
+  }
   try {
-    execSync(`node ${scriptPath} "hxa-connect" "${threadTarget}" ${JSON.stringify(message)}`, {
+    execSync(`node ${notifyConfig.script_path} "${notifyConfig.channel}" "${notifyConfig.target}" ${JSON.stringify(message)}`, {
       timeout: 10000,
       stdio: 'ignore'
     });

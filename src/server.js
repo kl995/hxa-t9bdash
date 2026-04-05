@@ -291,8 +291,11 @@ async function startPolling() {
   autoAssignEngine.start();
 
   // Start health watchdog (#129: agent health monitoring + alerting)
-  healthWatchdog.init(ws);
+  healthWatchdog.init(ws, config);
   healthWatchdog.start();
+
+  // Load health diagnostics endpoints from config
+  if (healthDiagRoutes.loadEndpoints) healthDiagRoutes.loadEndpoints(config);
 
   // Connect polling (30s) — all scopes in parallel (#100)
   setInterval(async () => {
