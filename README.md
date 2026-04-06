@@ -218,6 +218,18 @@ GitLab Webhook ──→ /api/report/webhook ──→ SQLite DB (real-time upda
 
 ### `config/sources.json` (not committed, contains secrets)
 
+For local/dev, copy `config/sources.example.json` to `config/sources.json`.
+
+For Railway or other repo-based deploys, you do not need to commit `config/sources.json`. The server can also boot from environment variables:
+
+- `HXA_CONFIG_JSON`: full JSON config blob, same shape as `sources.json`
+- or single-scope variables:
+  `HXA_CONNECT_HUB_URL`, `HXA_CONNECT_AGENT_TOKEN`, `HXA_GITLAB_URL`, `HXA_GITLAB_TOKEN`, `HXA_GITLAB_GROUP_ID`
+- optional:
+  `HXA_SCOPE_NAME`, `HXA_POLL_CONNECT_INTERVAL_MS`, `HXA_POLL_GITLAB_INTERVAL_MS`, `HXA_SCOPES_JSON`, `HXA_ENTITIES_JSON`, `HXA_HEALTH_ENDPOINTS_JSON`, `HXA_NOTIFICATIONS_JSON`, `HXA_WEBHOOKS_JSON`, `HXA_TELEGRAM_ACTIVITY_JSON`, `HXA_TELEGRAM_ACTIVITY_REMOTE_URL`, `HXA_TELEGRAM_ACTIVITY_LOG_DIR`, `HXA_TELEGRAM_ACTIVITY_MAX_AGE_MS`
+
+For Railway, the simplest path is usually one `HXA_CONFIG_JSON` variable plus any extra secret tokens it contains.
+
 ```json
 {
   "connect": {
@@ -229,6 +241,43 @@ GitLab Webhook ──→ /api/report/webhook ──→ SQLite DB (real-time upda
     "url": "https://gitlab.example.com",
     "token": "glpat-xxx",
     "groupId": 123
+  },
+  "telegram_activity": {
+    "remote_url": "https://your-local-dashboard.example.com/api/telegram-activity"
+  }
+}
+```
+
+For the shared Telegram activity path, expose the local dashboard's `GET /api/telegram-activity` endpoint and point Railway at it with `telegram_activity.remote_url` (or `HXA_TELEGRAM_ACTIVITY_REMOTE_URL`). Local deployments can keep using `telegram_activity.log_dir`.
+
+If the shared endpoint is served through `*.loca.lt`, the fetcher automatically sends the `bypass-tunnel-reminder: true` header so Railway can read the JSON endpoint instead of the LocalTunnel interstitial page.
+
+### Railway quick setup
+
+`railway.json` is included so Railway uses `npm start` and checks `/api/health`.
+
+Recommended env setup:
+
+- `HXA_CONFIG_JSON`: full config JSON for Connect/GitLab/Telegram activity
+- or `HXA_CONNECT_*` + `HXA_GITLAB_*` + `HXA_TELEGRAM_ACTIVITY_REMOTE_URL`
+- optional: `HXA_TELEGRAM_ACTIVITY_MAX_AGE_MS` if Railway should use a different freshness window
+
+Minimal Railway example:
+
+```json
+{
+  "connect": {
+    "hub_url": "https://connect.example.com/hub",
+    "agent_token": "bot_xxx"
+  },
+  "gitlab": {
+    "url": "https://gitlab.example.com",
+    "token": "glpat-xxx",
+    "group_id": 123
+  },
+  "telegram_activity": {
+    "remote_url": "https://your-local-dashboard.example.com/api/telegram-activity",
+    "max_age_ms": 1800000
   }
 }
 ```

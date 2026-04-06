@@ -22,6 +22,8 @@ const CardWall = {
       (agent.tags || []).join('|'),
       (agent.top_collaborator || {}).name,
       agent.last_active_at || '',
+      (agent.chat_activity || {}).last_seen_at || '',
+      (agent.chat_activity || {}).preview || '',
       agent.events_7d || 0,
       agent.closed_7d || 0,
       bmrs,
@@ -101,15 +103,20 @@ const CardWall = {
     }
 
     // Stats (HxA Friendly #58: unified Human+Agent language)
-    const active = agents.filter(a => a.online).length;
-    if (statsEl) statsEl.textContent = `${active} 活跃 / ${agents.length} 成员`;
+    const active = agents.filter(a => ['active', 'online'].includes(a.tier_status)).length;
+    if (statsEl) {
+      statsEl.textContent = I18n.current === 'zh'
+        ? `${active} 活跃 / ${agents.length} 成员`
+        : `${active} active / ${agents.length} members`;
+    }
   },
 
   cardHTML(agent) {
     const tasks = agent.current_tasks || [];
     const stats = agent.stats || {};
     const latestEvent = agent.latest_event;
-    const onlineClass = agent.online ? 'online' : 'offline';
+    const tierStatus = agent.tier_status || (agent.online ? 'online' : 'offline');
+    const onlineClass = tierStatus === 'active' || tierStatus === 'online' ? 'online' : 'offline';
     const lastSeen = agent.last_seen_at ? timeAgo(agent.last_seen_at) : '';
 
     // Identity badge (HxA Friendly #58: Human/Agent parity, subtle label)
@@ -120,24 +127,35 @@ const CardWall = {
 
     // 4-tier status badge (#135): busy / idle / inactive / offline
     const workStatus = agent.work_status || 'idle';
-    const tierStatus = agent.tier_status || (agent.online ? 'online' : 'offline');
-    const statusLabels = { busy: '🔴 繁忙', idle: '🟢 空闲', inactive: '🟡 不活跃', offline: '⚫ 离线' };
-    const tierLabels = { active: '🟢 活跃', online: '🟡 在线', offline: '⚫ 离线' };
+    const statusLabels = I18n.current === 'zh'
+      ? { busy: '🔴 繁忙', idle: '🟢 空闲', inactive: '🟡 不活跃', offline: '⚫ 离线', unknown: '❔ 无信号' }
+      : { busy: '🔴 Busy', idle: '🟢 Idle', inactive: '🟡 Inactive', offline: '⚫ Offline', unknown: '❔ No signal' };
+    const tierLabels = I18n.current === 'zh'
+      ? { active: '🟢 活跃', online: '🟡 在线', offline: '⚫ 离线', unknown: '❔ 无信号' }
+      : { active: '🟢 Active', online: '🟡 Online', offline: '⚫ Offline', unknown: '❔ No signal' };
     const statusLabel = statusLabels[workStatus] || tierLabels[tierStatus] || tierLabels.offline;
 
     const hs = agent.health_score != null ? agent.health_score : null;
     const hsClass = hs != null ? (hs > 70 ? 'health-green' : hs >= 40 ? 'health-yellow' : 'health-red') : '';
     const healthHTML = hs != null
-      ? `<span class="health-dot ${hsClass}" title="健康分: ${hs}"></span>`
+      ? `<span class="health-dot ${hsClass}" title="${I18n.current === 'zh' ? '健康分' : 'Health Score'}: ${hs}"></span>`
       : '';
 
     // Last active time (#98) — show for all agents
     const lastActiveAt = agent.last_active_at;
     const lastActiveHTML = lastActiveAt
-      ? `<div class="card-last-active">最后活跃: ${timeAgo(lastActiveAt)}</div>`
-      : (!agent.online && lastSeen)
-        ? `<div class="card-last-active">最后活跃: ${lastSeen}</div>`
+      ? `<div class="card-last-active">${I18n.current === 'zh' ? '最后活跃' : 'Last active'}: ${timeAgo(lastActiveAt)}</div>`
+      : ((tierStatus === 'offline' || tierStatus === 'unknown') && lastSeen)
+        ? `<div class="card-last-active">${I18n.current === 'zh' ? '最后活跃' : 'Last active'}: ${lastSeen}</div>`
         : '';
+    const chatActivity = agent.chat_activity;
+    const chatActivityHTML = chatActivity
+      ? `<div class="card-chat-activity">
+          <span class="card-chat-badge">${I18n.current === 'zh' ? 'Telegram' : 'Telegram'}</span>
+          <span class="card-chat-time">${timeAgo(chatActivity.last_seen_at)}</span>
+          ${chatActivity.preview ? `<div class="card-chat-preview">${esc(truncate(chatActivity.preview, 88))}</div>` : ''}
+        </div>`
+      : '';
 
     // Blocking MRs (#98) — red light for stale MRs
     const blockingMRs = agent.blocking_mrs || [];
@@ -167,7 +185,7 @@ const CardWall = {
     const capPct = cap.max > 0 ? Math.min(100, Math.round((cap.current / cap.max) * 100)) : 0;
     const capClass = capPct > 80 ? 'cap-high' : capPct > 50 ? 'cap-mid' : 'cap-low';
     const capacityHTML = `
-      <div class="card-capacity" title="负载: ${cap.current}/${cap.max}">
+      <div class="card-capacity" title="${I18n.current === 'zh' ? '负载' : 'Load'}: ${cap.current}/${cap.max}">
         <span class="cap-label">${cap.current}/${cap.max}</span>
         <div class="cap-bar"><div class="cap-fill ${capClass}" style="width:${capPct}%"></div></div>
       </div>
@@ -180,7 +198,7 @@ const CardWall = {
 
     const topCollab = agent.top_collaborator;
     const collabHTML = topCollab
-      ? `<div class="card-top-collab" title="最佳拍档 (权重 ${topCollab.weight})">🤝 ${esc(topCollab.name)}</div>`
+      ? `<div class="card-top-collab" title="${I18n.current === 'zh' ? '最佳拍档' : 'Top collaborator'} (${topCollab.weight})">🤝 ${esc(topCollab.name)}</div>`
       : '';
 
     // Hardware resource badges (#122)
@@ -201,9 +219,9 @@ const CardWall = {
 
     const statsHTML = `
       <div class="card-stats">
-        <span class="card-stat" title="进行中任务">📋 ${stats.open_tasks || 0}</span>
-        <span class="card-stat" title="已完成">✅ ${stats.closed_tasks || 0}</span>
-        <span class="card-stat" title="合并请求">🔀 ${stats.mr_count || 0}</span>
+        <span class="card-stat" title="${I18n.current === 'zh' ? '进行中任务' : 'Open Tasks'}">📋 ${stats.open_tasks || 0}</span>
+        <span class="card-stat" title="${I18n.current === 'zh' ? '已完成' : 'Completed'}">✅ ${stats.closed_tasks || 0}</span>
+        <span class="card-stat" title="${I18n.current === 'zh' ? '合并请求' : 'Merge Requests'}">🔀 ${stats.mr_count || 0}</span>
         <span class="card-stat" title="Issue">📝 ${stats.issue_count || 0}</span>
       </div>
     `;
@@ -213,8 +231,8 @@ const CardWall = {
     const closed7d = agent.closed_7d;
     const activityMetricsHTML = (events7d != null || closed7d != null) ? `
       <div class="card-activity-metrics">
-        <span class="card-stat" title="近 7 天事件数">⚡ ${events7d || 0} 事件/7d</span>
-        <span class="card-stat" title="近 7 天完成数">🏁 ${closed7d || 0} 完成/7d</span>
+        <span class="card-stat" title="${I18n.current === 'zh' ? '近 7 天事件数' : 'Events in last 7d'}">⚡ ${events7d || 0} ${I18n.current === 'zh' ? '事件/7d' : 'events/7d'}</span>
+        <span class="card-stat" title="${I18n.current === 'zh' ? '近 7 天完成数' : 'Completed in last 7d'}">🏁 ${closed7d || 0} ${I18n.current === 'zh' ? '完成/7d' : 'done/7d'}</span>
       </div>
     ` : '';
 
@@ -225,11 +243,11 @@ const CardWall = {
     const avgTime = stats.avg_completion_ms ? this.formatDuration(stats.avg_completion_ms) : '—';
     const historyHTML = (stats.closed_last_7d != null || stats.closed_last_30d != null) ? `
       <details class="card-history" onclick="event.stopPropagation()">
-        <summary class="history-toggle">📊 历史统计 ${sparklineHTML}</summary>
+        <summary class="history-toggle">📊 ${I18n.current === 'zh' ? '历史统计' : 'History'} ${sparklineHTML}</summary>
         <div class="history-grid">
-          <span class="history-label">近 7 天</span><span class="history-value">${stats.closed_last_7d || 0} 完成</span>
-          <span class="history-label">近 30 天</span><span class="history-value">${stats.closed_last_30d || 0} 完成</span>
-          <span class="history-label">平均耗时</span><span class="history-value">${avgTime}</span>
+          <span class="history-label">${I18n.current === 'zh' ? '近 7 天' : 'Last 7d'}</span><span class="history-value">${stats.closed_last_7d || 0} ${I18n.current === 'zh' ? '完成' : 'done'}</span>
+          <span class="history-label">${I18n.current === 'zh' ? '近 30 天' : 'Last 30d'}</span><span class="history-value">${stats.closed_last_30d || 0} ${I18n.current === 'zh' ? '完成' : 'done'}</span>
+          <span class="history-label">${I18n.current === 'zh' ? '平均耗时' : 'Avg time'}</span><span class="history-value">${avgTime}</span>
         </div>
       </details>
     ` : '';
@@ -252,11 +270,13 @@ const CardWall = {
             : `<span class="task-link">${icon} ${esc(truncate(t.title, 35))}</span>`;
           return `<div class="task-item">${link}${proj}</div>`;
         }).join('')}
-        ${tasks.length > 2 ? `<div class="task-item task-more">+${tasks.length - 2} more</div>` : ''}
+        ${tasks.length > 2 ? `<div class="task-item task-more">+${tasks.length - 2} ${I18n.current === 'zh' ? '更多' : 'more'}</div>` : ''}
       </div>
     ` : '';
 
-    const offlineBanner = !agent.online ? '<span class="offline-banner">离线</span>' : '';
+    const offlineBanner = (tierStatus === 'offline' || tierStatus === 'unknown')
+      ? `<span class="offline-banner">${tierStatus === 'unknown' ? (I18n.current === 'zh' ? '无信号' : 'No signal') : (I18n.current === 'zh' ? '离线' : 'Offline')}</span>`
+      : '';
 
     return `
       <div class="agent-card ${onlineClass}" data-name="${esc(agent.name)}">
@@ -265,9 +285,10 @@ const CardWall = {
           <div class="card-top-left">${healthHTML}${kindBadge}<span class="agent-name">${esc(agent.name)}</span></div>
           <span class="work-status-badge ${workStatus}" title="${workStatus}">${statusLabel}</span>
         </div>
-        <div class="agent-role">${esc(agent.role || (agent.kind === 'human' ? '团队成员' : 'AI Agent'))}</div>
+        <div class="agent-role">${esc(agent.role || (agent.kind === 'human' ? (I18n.current === 'zh' ? '团队成员' : 'Team Member') : 'AI Agent'))}</div>
         ${agent.bio ? `<div class="agent-bio">${esc(truncate(agent.bio, 60))}</div>` : ''}
         ${lastActiveHTML}
+        ${chatActivityHTML}
         ${blockingHTML}
         ${tagsHTML}
         ${capacityHTML}

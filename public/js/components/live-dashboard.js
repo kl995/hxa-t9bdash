@@ -113,6 +113,13 @@ const LiveDashboard = {
           return `<div class="live-event-item"><span class="live-event-action">${esc(e.action)}</span> ${esc(truncate(e.targetTitle, 40))} <span class="live-event-time">${timeAgo(e.timestamp)}</span></div>`;
         }).join('')
       : '';
+    const chatHTML = agent.chatActivity
+      ? `<div class="live-chat-signal">
+          <span class="live-chat-label">Telegram</span>
+          <span class="live-chat-time">${timeAgo(agent.chatActivity.last_seen_at)}</span>
+          ${agent.chatActivity.preview ? `<div class="live-chat-preview">${esc(truncate(agent.chatActivity.preview, 100))}</div>` : ''}
+        </div>`
+      : '';
 
     const activityBar = this._activityBar(agent.activityIntensity);
     const lastActive = agent.lastActiveMs !== null ? timeAgo(Date.now() - agent.lastActiveMs) : '';
@@ -133,6 +140,7 @@ const LiveDashboard = {
         <div class="live-agent-activity">
           <div class="live-section-label">Recent Activity ${activityBar}</div>
           ${eventsHTML}
+          ${chatHTML}
           ${lastActive ? `<div class="live-last-active">Last active: ${lastActive}</div>` : ''}
         </div>
       </div>
@@ -156,6 +164,8 @@ const LiveDashboard = {
       agent.healthScore,
       agent.activityIntensity,
       agent.lastActiveMs ? Math.floor(agent.lastActiveMs / 60000) : null,
+      agent.chatActivity ? Math.floor((agent.chatActivity.last_seen_at || 0) / 60000) : null,
+      agent.chatActivity ? agent.chatActivity.preview : '',
       agent.currentTasks.map(t => t.title),
       agent.recentEvents.map(e => e.action + e.targetTitle)
     ]);

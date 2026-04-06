@@ -157,8 +157,9 @@ const MyView = {
       `;
     }
 
-    const statusClass = agent.online ? 'online' : 'offline';
-    const statusText = agent.online ? '在线' : '离线';
+    const tierStatus = agent.tier_status || (agent.online ? 'online' : 'offline');
+    const statusClass = tierStatus === 'active' || tierStatus === 'online' ? 'online' : 'offline';
+    const statusText = tierStatus === 'unknown' ? '无信号' : statusClass === 'online' ? '在线' : '离线';
     return `
       <div class="myview-header">
         ${kindBadge}

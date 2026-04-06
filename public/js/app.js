@@ -74,10 +74,18 @@ function truncate(str, len) {
 
 function timeAgo(ts) {
   const diff = Date.now() - ts;
-  if (diff < 60000) return '刚刚';
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
-  return Math.floor(diff / 86400000) + '天前';
+  const i18n = typeof I18n !== 'undefined' ? I18n : null;
+  if (diff < 60000) return i18n?.t('time.justNow') || 'just now';
+  if (diff < 3600000) {
+    const minutes = Math.floor(diff / 60000);
+    return i18n?.format('time.minutesAgo', { count: minutes }) || `${minutes}m ago`;
+  }
+  if (diff < 86400000) {
+    const hours = Math.floor(diff / 3600000);
+    return i18n?.format('time.hoursAgo', { count: hours }) || `${hours}h ago`;
+  }
+  const days = Math.floor(diff / 86400000);
+  return i18n?.format('time.daysAgo', { count: days }) || `${days}d ago`;
 }
 
 function formatTime(ts) {
@@ -86,6 +94,214 @@ function formatTime(ts) {
   const pad = n => String(n).padStart(2, '0');
   return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+const I18n = {
+  STORAGE_KEY: 'the9bit-dashboard-language',
+  current: 'en',
+  dict: {
+    en: {
+      'nav.overview': 'Overview',
+      'nav.team': 'Team',
+      'nav.tasks': 'Tasks',
+      'nav.analysis': 'Analysis',
+      'nav.system': 'System',
+      'nav.myview': 'My View',
+      'sub.team': 'Team',
+      'sub.collab': 'Collab',
+      'sub.live': 'Live',
+      'sub.tasks': 'Tasks',
+      'sub.pipeline': 'Pipeline',
+      'sub.mrboard': 'MR Board',
+      'sub.report': 'Reports',
+      'sub.timeline': 'Timeline',
+      'sub.tokens': 'Tokens',
+      'sub.estimates': 'Estimates',
+      'sub.health': 'Health',
+      'sub.projects': 'Projects',
+      'sub.myview': 'My View',
+      'sub.about': 'About',
+      'hero.kicker': 'the9bit AI operations visibility',
+      'hero.title': 'the9bit AI Bots Dashboard',
+      'hero.copy': 'Live team health, task movement, GitLab flow, and Connect activity in a branded black-and-orange control surface for the9bit AI bots.',
+      'hero.pill1': 'Brand-tuned',
+      'hero.pill2': 'Live HXA data',
+      'hero.pill3': 'Railway deployed',
+      'section.teamOverview': 'Team Overview',
+      'section.blockers': '⚠️ Blocker Alerts',
+      'section.suggestions': '💡 Action Suggestions',
+      'section.metrics': '📊 Utilization & Output Metrics',
+      'section.teamMembers': 'Team Members',
+      'section.teamMembersSubtitle': 'Live status, current task, health score, and workload for every AI agent.',
+      'section.taskBoard': 'Task Board',
+      'section.recentActivity': 'Recent Activity',
+      'section.productivityTrends': 'Productivity Trends',
+      'section.dailyCompleted': 'Daily Completed Tasks',
+      'section.activityHeatmap': 'Active Hours Heatmap',
+      'section.collaboration': 'Collaboration',
+      'board.todo': 'To Do',
+      'board.doing': 'Doing',
+      'board.done': 'Done',
+      'status.connected': 'Connected',
+      'status.disconnected': 'Offline',
+      'status.connecting': 'Connecting…',
+      'time.justNow': 'just now',
+      'time.minutesAgo': '{count}m ago',
+      'time.hoursAgo': '{count}h ago',
+      'time.daysAgo': '{count}d ago',
+      'filter.allAgents': 'All {count} Agents',
+      'filter.selectedAgents': '{selected} / {count} Agents',
+      'sort.default': 'Sort: Default',
+      'sort.health': 'By Health',
+      'sort.activity': 'By Activity',
+      'sort.name': 'By Name'
+    },
+    zh: {
+      'nav.overview': '概览',
+      'nav.team': '团队',
+      'nav.tasks': '任务',
+      'nav.analysis': '分析',
+      'nav.system': '系统',
+      'nav.myview': '我的',
+      'sub.team': '团队',
+      'sub.collab': '协作',
+      'sub.live': '实时',
+      'sub.tasks': '任务',
+      'sub.pipeline': '流水线',
+      'sub.mrboard': 'MR 看板',
+      'sub.report': '报表',
+      'sub.timeline': '时间轴',
+      'sub.tokens': '代币',
+      'sub.estimates': '预估',
+      'sub.health': '健康',
+      'sub.projects': '项目',
+      'sub.myview': '我的',
+      'sub.about': '版本信息',
+      'hero.kicker': 'the9bit AI 运营可视化',
+      'hero.title': 'the9bit AI Bots Dashboard',
+      'hero.copy': '以品牌化的黑橙控制台方式查看团队健康、任务流转、GitLab 动态与 Connect 活动。',
+      'hero.pill1': '品牌化设计',
+      'hero.pill2': '实时 HXA 数据',
+      'hero.pill3': 'Railway 已部署',
+      'section.teamOverview': '团队概况',
+      'section.blockers': '⚠️ 卡点告警',
+      'section.suggestions': '💡 行动建议',
+      'section.metrics': '📊 利用率与产出指标',
+      'section.teamMembers': '团队成员',
+      'section.teamMembersSubtitle': '实时显示每位 AI Agent 的在线状态、当前任务、健康评分和工作负载。',
+      'section.taskBoard': '任务看板',
+      'section.recentActivity': '最近活动',
+      'section.productivityTrends': '生产力趋势',
+      'section.dailyCompleted': '每日完成任务',
+      'section.activityHeatmap': '活跃时段热力图',
+      'section.collaboration': '协作关系',
+      'board.todo': '待办',
+      'board.doing': '进行中',
+      'board.done': '已完成',
+      'status.connected': '已连接',
+      'status.disconnected': '断开',
+      'status.connecting': '连接中…',
+      'time.justNow': '刚刚',
+      'time.minutesAgo': '{count}分钟前',
+      'time.hoursAgo': '{count}小时前',
+      'time.daysAgo': '{count}天前',
+      'filter.allAgents': '全部 {count} Agent',
+      'filter.selectedAgents': '{selected} / {count} Agent',
+      'sort.default': '排序: 默认',
+      'sort.health': '按健康分',
+      'sort.activity': '按活跃度',
+      'sort.name': '按名称'
+    }
+  },
+
+  init() {
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    this.current = saved || 'en';
+    const selector = document.getElementById('language-selector');
+    if (selector) {
+      selector.value = this.current;
+      selector.addEventListener('change', () => {
+        this.current = selector.value;
+        localStorage.setItem(this.STORAGE_KEY, this.current);
+        this.apply();
+      });
+    }
+    this.apply();
+  },
+
+  t(key) {
+    return this.dict[this.current]?.[key] || this.dict.en[key] || key;
+  },
+
+  format(key, vars = {}) {
+    return Object.entries(vars).reduce(
+      (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+      this.t(key)
+    );
+  },
+
+  apply() {
+    document.documentElement.lang = this.current === 'zh' ? 'zh-CN' : 'en';
+    document.body.dataset.lang = this.current;
+    document.title = 'the9bit AI Bots Dashboard';
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const key = el.dataset.i18n;
+      el.textContent = this.t(key);
+    });
+    this.applyStaticText();
+    if (typeof App !== 'undefined' && App.data) {
+      App.renderAllPages();
+      if (typeof Metrics !== 'undefined' && typeof Metrics.render === 'function') {
+        Metrics.render();
+      }
+      if (typeof HealthDiagnostics !== 'undefined' && typeof HealthDiagnostics.render === 'function') {
+        HealthDiagnostics.render();
+      }
+      if (typeof WorkloadReport !== 'undefined' && typeof WorkloadReport.render === 'function') {
+        WorkloadReport.render();
+      }
+      if (typeof Pipeline !== 'undefined' && typeof Pipeline.render === 'function') {
+        Pipeline.render();
+      }
+      if (typeof MyView !== 'undefined' && typeof MyView.fetchAndRender === 'function' && App.currentPage === 'myview') {
+        MyView.fetchAndRender();
+      }
+    }
+  },
+
+  applyStaticText() {
+    const overviewSort = document.getElementById('overview-sort');
+    const teamSort = document.getElementById('team-sort');
+    for (const sel of [overviewSort, teamSort]) {
+      if (!sel) continue;
+      const defaultOpt = sel.querySelector('option[value="default"]');
+      const healthOpt = sel.querySelector('option[value="health"]');
+      const activityOpt = sel.querySelector('option[value="activity"]');
+      const nameOpt = sel.querySelector('option[value="name"]');
+      if (defaultOpt) defaultOpt.textContent = this.t('sort.default');
+      if (healthOpt) healthOpt.textContent = this.t('sort.health');
+      if (activityOpt) activityOpt.textContent = this.t('sort.activity');
+      if (nameOpt) nameOpt.textContent = this.t('sort.name');
+    }
+
+    if (typeof AgentFilter !== 'undefined' && typeof AgentFilter._updateGlobalLabel === 'function') {
+      AgentFilter._updateGlobalLabel();
+    }
+
+    if (typeof App !== 'undefined' && App.ws) {
+      this.applyConnectionStatus(App.ws.readyState);
+    }
+  },
+
+  applyConnectionStatus(readyState) {
+    if (readyState === WebSocket.OPEN) {
+      App.setStatus('connected');
+    } else if (readyState === WebSocket.CONNECTING) {
+      App.setStatus('connecting');
+    } else {
+      App.setStatus('disconnected');
+    }
+  }
+};
 
 // Scope manager (#100): multi connect-server × org management
 const ScopeManager = {
@@ -200,6 +416,8 @@ const App = {
   collabGraph: null,
 
   async init() {
+    I18n.init();
+
     // Init scope manager (#100)
     await ScopeManager.init();
 
@@ -525,8 +743,8 @@ const App = {
         (a.bio || '').toLowerCase().includes(search)
       );
     }
-    if (statusFilter === 'online') agents = agents.filter(a => a.online);
-    if (statusFilter === 'offline') agents = agents.filter(a => !a.online);
+    if (statusFilter === 'online') agents = agents.filter(a => ['active', 'online'].includes(a.tier_status));
+    if (statusFilter === 'offline') agents = agents.filter(a => ['offline', 'unknown'].includes(a.tier_status));
 
     // Apply sort (#50)
     const sortVal = document.getElementById('team-sort')?.value || 'default';
@@ -716,7 +934,12 @@ const App = {
     switch (msg.type) {
       case 'snapshot':
         if (msg.data.team) {
-          const agents = Array.isArray(msg.data.team) ? msg.data.team : [];
+          const teamPayload = msg.data.team;
+          const agents = Array.isArray(teamPayload)
+            ? teamPayload
+            : Array.isArray(teamPayload.agents)
+              ? teamPayload.agents
+              : [];
           this.data.team = agents;
           AgentFilter.setAgents(ScopeManager.filter(agents));
         }
@@ -779,7 +1002,11 @@ const App = {
   setStatus(status) {
     const el = document.getElementById('ws-status');
     el.className = `status-badge ${status}`;
-    const labels = { connected: '已连接', disconnected: '断开', connecting: '连接中…' };
+    const labels = {
+      connected: I18n.t('status.connected'),
+      disconnected: I18n.t('status.disconnected'),
+      connecting: I18n.t('status.connecting')
+    };
     el.textContent = labels[status] || status;
   },
 

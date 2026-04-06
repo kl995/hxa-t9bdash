@@ -4,6 +4,7 @@
 const { Router } = require('express');
 const db = require('../db');
 const collab = require('../analyzers/collab');
+const { deriveWorkStatus } = require('../status');
 
 const router = Router();
 
@@ -70,27 +71,22 @@ function buildOverview() {
   //   offline: Connect not online
   const agentStats = db.getAgentStats();
   const agentStatsMap = new Map(agentStats.map(s => [s.name, s]));
-  const fourHoursAgo = now - 4 * 3600000;
-  const twentyFourHoursAgo = now - 24 * 3600000;
   const sevenDaysAgo = now - 7 * 86400000;
 
   const agentSummaries = agents.map(a => {
     const myTasks = openTasks.filter(t => t.assignee === a.name);
     const stats = agentStatsMap.get(a.name);
     const lastActive = stats?.last_active || null;
-    const hasRecentActivity = lastActive && lastActive > fourHoursAgo;
-    const hasAnyDayActivity = lastActive && lastActive > twentyFourHoursAgo;
-
-    let status;
-    if (!a.online) {
-      status = 'offline';
-    } else if (hasRecentActivity && myTasks.length > 0) {
-      status = 'busy';
-    } else if (!hasAnyDayActivity) {
-      status = 'inactive';
-    } else {
-      status = 'idle';
-    }
+    const health = db.getAgentHealth(a.name);
+    const status = deriveWorkStatus({
+      online: !!a.online,
+      openTaskCount: myTasks.length,
+      lastSeenAt: a.last_seen_at || 0,
+      chatLastSeenAt: a.chat_last_seen_at || 0,
+      lastEventTs: lastActive || 0,
+      healthReportedAt: health?.reported_at || 0,
+      now,
+    });
 
     // Activity metrics (#135)
     const agentEvents = db.getEventsInWindow(sevenDaysAgo, a.name);
@@ -182,12 +178,13 @@ function toText(data) {
   lines.push(`## Agents`);
   for (const a of data.agents) {
     const icon = a.status === 'busy' ? '🟢' : a.status === 'idle' ? '⚪' : a.status === 'inactive' ? '🟡' : '⚫';
+    const effectiveIcon = a.status === 'unknown' ? '❔' : icon;
     const work = a.current_work.length > 0
       ? a.current_work.map(w => `${w.title} (${w.project})`).join(', ')
       : 'no tasks';
     const lastActive = a.last_active_at ? new Date(a.last_active_at).toISOString().slice(0, 16) : 'never';
     const metrics = `events_7d: ${a.events_7d ?? 0}, closed_7d: ${a.closed_7d ?? 0}`;
-    lines.push(`${icon} ${a.name} [${a.status}]: ${work} | last: ${lastActive} | ${metrics}`);
+    lines.push(`${effectiveIcon} ${a.name} [${a.status}]: ${work} | last: ${lastActive} | ${metrics}`);
   }
   lines.push('');
 

@@ -12,7 +12,10 @@ const TaskBoard = {
 
   _estimateTooltip(est) {
     const info = this._ESTIMATE_INFO[est];
-    return info ? `${est}: ${info.sessions} session(s), ${info.label}` : est;
+    if (!info) return est;
+    return I18n.current === 'zh'
+      ? `${est}: ${info.sessions} 个 session, ${info.label}`
+      : `${est}: ${info.sessions} session(s), ${info.label}`;
   },
 
   init() {},
@@ -44,7 +47,7 @@ const TaskBoard = {
           </a>
         </div>
         <div class="task-meta">
-          ${t.assignee ? `<span class="task-assignee">${esc(t.assignee)}</span>` : '<span class="task-unassigned">未分配</span>'}
+          ${t.assignee ? `<span class="task-assignee">${esc(t.assignee)}</span>` : `<span class="task-unassigned">${I18n.current === 'zh' ? '未分配' : 'Unassigned'}</span>`}
           <span>${esc(t.project)}</span>
           <span>${t.type}</span>
           ${t.updated_at ? `<span>${timeAgo(t.updated_at)}</span>` : ''}
@@ -77,7 +80,7 @@ const TaskBoard = {
 
     if (tasks.length === 0) {
       if (list.querySelector('.empty-state') && list.children.length === 1) return;
-      list.innerHTML = '<div class="empty-state">暂无任务</div>';
+      list.innerHTML = `<div class="empty-state">${I18n.current === 'zh' ? '暂无任务' : 'No tasks'}</div>`;
       return;
     }
 
@@ -128,7 +131,7 @@ const TaskBoard = {
       const more = document.createElement('div');
       more.className = 'task-overflow';
       more.style.cssText = 'text-align:center; color: var(--text-secondary); font-size: 12px; padding: 8px;';
-      more.textContent = `+${tasks.length - 30} more`;
+      more.textContent = I18n.current === 'zh' ? `+${tasks.length - 30} 更多` : `+${tasks.length - 30} more`;
       list.appendChild(more);
     }
   }

@@ -8,7 +8,7 @@ const Timeline = {
     if (!container) return;
 
     if (!events || events.length === 0) {
-      container.innerHTML = '<div class="empty-state">暂无活动记录</div>';
+      container.innerHTML = `<div class="empty-state">${I18n.current === 'zh' ? '暂无活动记录' : 'No activity yet'}</div>`;
       return;
     }
 
@@ -25,15 +25,25 @@ const Timeline = {
 
   // Human-readable action labels
   _actionLabel(action) {
-    const labels = {
-      'opened': '创建',
-      'closed': '关闭',
-      'merged': '合并',
-      'commented on': '评论',
-      'pushed to': '推送',
-      'approved': '审批',
-      'assigned': '分配'
-    };
+    const labels = I18n.current === 'zh'
+      ? {
+          opened: '创建',
+          closed: '关闭',
+          merged: '合并',
+          'commented on': '评论',
+          'pushed to': '推送',
+          approved: '审批',
+          assigned: '分配'
+        }
+      : {
+          opened: 'opened',
+          closed: 'closed',
+          merged: 'merged',
+          'commented on': 'commented',
+          'pushed to': 'pushed',
+          approved: 'approved',
+          assigned: 'assigned'
+        };
     return labels[action] || esc(action);
   }
 };

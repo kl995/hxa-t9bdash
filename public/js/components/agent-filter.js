@@ -86,10 +86,13 @@ const AgentFilter = {
     const clearBtn = document.getElementById('global-clear-filter');
     if (label) {
       if (this.filter) {
-        label.textContent = `${this.filter.size} / ${this.allAgents.length} Agent`;
+        label.textContent = I18n.format('filter.selectedAgents', {
+          selected: this.filter.size,
+          count: this.allAgents.length
+        });
         label.classList.add('filtered');
       } else {
-        label.textContent = `全部 ${this.allAgents.length} Agent`;
+        label.textContent = I18n.format('filter.allAgents', { count: this.allAgents.length });
         label.classList.remove('filtered');
       }
     }
@@ -158,16 +161,19 @@ const AgentFilter = {
     if (!container) return;
 
     const sorted = [...this.allAgents].sort((a, b) => {
-      if (a.online !== b.online) return b.online - a.online;
+      const aOnline = ['active', 'online'].includes(a.tier_status);
+      const bOnline = ['active', 'online'].includes(b.tier_status);
+      if (aOnline !== bOnline) return Number(bOnline) - Number(aOnline);
       return a.name.localeCompare(b.name);
     });
 
     container.innerHTML = sorted.map(a => {
       const checked = this._tempSelection.has(a.name) ? 'checked' : '';
+      const dotClass = ['active', 'online'].includes(a.tier_status) ? 'online' : 'offline';
       return `
         <label class="check-item">
           <input type="checkbox" value="${esc(a.name)}" ${checked}>
-          <span class="online-dot ${a.online ? 'online' : 'offline'}"></span>
+          <span class="online-dot ${dotClass}"></span>
           <span class="check-name">${esc(a.name)}</span>
           <span class="check-role">${esc(a.role)}</span>
         </label>

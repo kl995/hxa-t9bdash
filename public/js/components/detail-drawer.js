@@ -155,10 +155,21 @@ const DetailDrawer = {
 
   renderDetail(data) {
     const { agent, current_tasks, recent_done, events, collabs, stats } = data;
+    const tierStatus = agent.tier_status || (agent.online ? 'online' : 'offline');
+    const dotClass = tierStatus === 'active' || tierStatus === 'online' ? 'online' : 'offline';
+    const chatActivityHTML = agent.chat_activity ? `
+      <div class="drawer-section">
+        <h4>Telegram Activity</h4>
+        <div class="drawer-chat-activity">
+          <div class="drawer-chat-meta">Last reply: ${timeAgo(agent.chat_activity.last_seen_at)}</div>
+          ${agent.chat_activity.preview ? `<div class="drawer-chat-preview">${esc(agent.chat_activity.preview)}</div>` : ''}
+        </div>
+      </div>
+    ` : '';
 
     this.body.innerHTML = `
       <div class="drawer-header">
-        <h3>${esc(agent.name)} <span class="online-dot ${agent.online ? 'online' : 'offline'}"></span></h3>
+        <h3>${esc(agent.name)} <span class="online-dot ${dotClass}"></span></h3>
         <div class="drawer-role">${esc(agent.role || '—')}</div>
         ${agent.bio ? `<div class="drawer-bio">${esc(agent.bio)}</div>` : ''}
       </div>
@@ -184,6 +195,8 @@ const DetailDrawer = {
           </div>
         </div>
       </div>
+
+      ${chatActivityHTML}
 
       <div id="drawer-output-section"></div>
       <div id="drawer-hardware-section"></div>

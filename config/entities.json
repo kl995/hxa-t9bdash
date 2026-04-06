@@ -1,38 +1,67 @@
 {
-  "_comment": "Agent entity definitions. Role/bio act as fallback when Connect API returns null. Customize with your team members.",
+  "_comment": "the9bit HxA Dash POC team mapping",
   "entities": [
     {
-      "id": "alice",
-      "display_name": "Alice",
+      "id": "khongloon",
+      "display_name": "khongloon",
       "kind": "human",
-      "role": "Product Owner",
-      "bio": "Product lead and team coordinator",
-      "identities": { "connect": "Alice", "gitlab": "alice" },
-      "skills": ["product", "architecture", "strategy"]
+      "role": "Owner / CEO",
+      "bio": "Owns the9bit operations and bot orchestration decisions",
+      "identities": {
+        "connect": "khongloon"
+      },
+      "skills": ["strategy", "ops", "prioritization"]
     },
     {
-      "id": "agent-1",
-      "display_name": "Agent 1",
-      "role": "Backend Developer",
-      "bio": "Backend services and infrastructure",
-      "identities": { "connect": "agent-1", "gitlab": "agent-1" },
-      "skills": ["backend", "devops", "infra", "ci"]
+      "id": "the9bit_cocobot",
+      "display_name": "the9bit_cocobot",
+      "role": "Operations Coordinator",
+      "bio": "Primary owner-facing bot for execution, reporting, and cross-task coordination",
+      "identities": {
+        "connect": "the9bit_cocobot"
+      },
+      "skills": ["ops", "reporting", "coordination"]
     },
     {
-      "id": "agent-2",
-      "display_name": "Agent 2",
-      "role": "Frontend Developer",
-      "bio": "Frontend UI and UX development",
-      "identities": { "connect": "agent-2", "gitlab": "agent-2" },
-      "skills": ["frontend", "ui", "ux", "react"]
+      "id": "t9b_marketingbot",
+      "display_name": "t9b_marketingbot",
+      "role": "Marketing",
+      "bio": "Marketing planning, campaigns, and content coordination",
+      "identities": {
+        "connect": "t9b_marketingbot",
+        "gitlab": "marketing371"
+      },
+      "skills": ["marketing", "content", "growth"]
     },
     {
-      "id": "agent-3",
-      "display_name": "Agent 3",
-      "role": "QA / Security",
-      "bio": "Testing, security, and quality assurance",
-      "identities": { "connect": "agent-3", "gitlab": "agent-3" },
-      "skills": ["testing", "security", "review"]
+      "id": "t9b_aigdbot",
+      "display_name": "t9b_aigdbot",
+      "role": "AIGD",
+      "bio": "AIGD workflow and creative task support",
+      "identities": {
+        "connect": "t9b_aigdbot"
+      },
+      "skills": ["aigd", "creative", "research"]
+    },
+    {
+      "id": "the9bit_chatbot",
+      "display_name": "the9bit_chatbot",
+      "role": "Chat Support",
+      "bio": "General conversation and user-facing interaction bot",
+      "identities": {
+        "connect": "the9bit_chatbot"
+      },
+      "skills": ["chat", "support", "engagement"]
+    },
+    {
+      "id": "the9bit_hxadash",
+      "display_name": "the9bit_hxadash",
+      "role": "Dashboard",
+      "bio": "HXA dashboard service for team visibility",
+      "identities": {
+        "connect": "the9bit_hxadash"
+      },
+      "skills": ["dashboard", "visibility", "monitoring"]
     }
   ]
 }

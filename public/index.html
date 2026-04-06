@@ -3,26 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HxA Dash — Agent 团队面板</title>
+  <title>the9bit AI Bots Dashboard</title>
+  <meta name="theme-color" content="#0b0b0b">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div id="progress-bar"></div>
   <header>
     <div class="header-left">
-      <h1>HxA Dash</h1>
+      <a href="#overview" class="brand-lockup" aria-label="the9bit AI Bots Dashboard">
+        <span class="brand-mark-wrap">
+          <img src="assets/the9bit-logo.png" alt="the9bit logo" class="brand-mark brand-mark-full">
+        </span>
+        <span class="brand-copy">
+          <span class="brand-kicker">the9bit</span>
+          <span class="brand-title">AI Bots Dashboard</span>
+        </span>
+      </a>
       <button class="nav-hamburger" id="nav-hamburger" aria-label="菜单" aria-expanded="false">☰</button>
       <nav id="main-nav">
-        <a href="#overview" class="nav-item active" data-page="overview">Overview</a>
-        <a href="#team" class="nav-item" data-page="team">团队</a>
-        <a href="#tasks" class="nav-item" data-page="tasks">任务</a>
-        <a href="#analysis" class="nav-item" data-page="analysis">分析</a>
-        <a href="#system" class="nav-item" data-page="system">系统</a>
-        <a href="#myview" class="nav-item" data-page="myview">我的</a>
+        <a href="#overview" class="nav-item active" data-page="overview" data-i18n="nav.overview">Overview</a>
+        <a href="#team" class="nav-item" data-page="team" data-i18n="nav.team">团队</a>
+        <a href="#tasks" class="nav-item" data-page="tasks" data-i18n="nav.tasks">任务</a>
+        <a href="#analysis" class="nav-item" data-page="analysis" data-i18n="nav.analysis">分析</a>
+        <a href="#system" class="nav-item" data-page="system" data-i18n="nav.system">系统</a>
+        <a href="#myview" class="nav-item" data-page="myview" data-i18n="nav.myview">我的</a>
       </nav>
       <button id="nav-close-btn" aria-label="关闭菜单">×</button>
     </div>
     <div class="header-right">
+      <select id="language-selector" class="language-select" title="Language">
+        <option value="en">EN</option>
+        <option value="zh">中文</option>
+      </select>
       <select id="scope-selector" class="scope-select hidden" title="管理范围"></select>
       <div class="global-agent-filter">
         <button id="global-select-agents" class="btn-filter-global" title="筛选 Agent">
@@ -45,36 +58,56 @@
   <main>
     <!-- Sub-tabs for grouped pages (#114) -->
     <div class="sub-tabs hidden" data-group="team">
-      <a href="#team" class="sub-tab active" data-subpage="team">团队</a>
-      <a href="#team/collab" class="sub-tab" data-subpage="collab">协作</a>
-      <a href="#team/live" class="sub-tab" data-subpage="live">Live</a>
+      <a href="#team" class="sub-tab active" data-subpage="team" data-i18n="sub.team">团队</a>
+      <a href="#team/collab" class="sub-tab" data-subpage="collab" data-i18n="sub.collab">协作</a>
+      <a href="#team/live" class="sub-tab" data-subpage="live" data-i18n="sub.live">Live</a>
     </div>
     <div class="sub-tabs hidden" data-group="tasks">
-      <a href="#tasks" class="sub-tab active" data-subpage="tasks">任务</a>
-      <a href="#tasks/pipeline" class="sub-tab" data-subpage="pipeline">Pipeline</a>
-      <a href="#tasks/mr-board" class="sub-tab" data-subpage="mr-board">MR Board</a>
+      <a href="#tasks" class="sub-tab active" data-subpage="tasks" data-i18n="sub.tasks">任务</a>
+      <a href="#tasks/pipeline" class="sub-tab" data-subpage="pipeline" data-i18n="sub.pipeline">Pipeline</a>
+      <a href="#tasks/mr-board" class="sub-tab" data-subpage="mr-board" data-i18n="sub.mrboard">MR Board</a>
     </div>
     <div class="sub-tabs hidden" data-group="analysis">
-      <a href="#analysis" class="sub-tab active" data-subpage="report">报表</a>
-      <a href="#analysis/timeline" class="sub-tab" data-subpage="timeline">时间轴</a>
-      <a href="#analysis/tokens" class="sub-tab" data-subpage="tokens">Tokens</a>
-      <a href="#analysis/estimates" class="sub-tab" data-subpage="estimates">预估</a>
+      <a href="#analysis" class="sub-tab active" data-subpage="report" data-i18n="sub.report">报表</a>
+      <a href="#analysis/timeline" class="sub-tab" data-subpage="timeline" data-i18n="sub.timeline">时间轴</a>
+      <a href="#analysis/tokens" class="sub-tab" data-subpage="tokens" data-i18n="sub.tokens">Tokens</a>
+      <a href="#analysis/estimates" class="sub-tab" data-subpage="estimates" data-i18n="sub.estimates">预估</a>
     </div>
     <div class="sub-tabs hidden" data-group="system">
-      <a href="#system" class="sub-tab active" data-subpage="health">健康</a>
-      <a href="#system/projects" class="sub-tab" data-subpage="projects">项目</a>
+      <a href="#system" class="sub-tab active" data-subpage="health" data-i18n="sub.health">健康</a>
+      <a href="#system/projects" class="sub-tab" data-subpage="projects" data-i18n="sub.projects">项目</a>
     </div>
     <div class="sub-tabs hidden" data-group="myview">
-      <a href="#myview" class="sub-tab active" data-subpage="myview">我的</a>
-      <a href="#myview/about" class="sub-tab" data-subpage="about">版本信息</a>
+      <a href="#myview" class="sub-tab active" data-subpage="myview" data-i18n="sub.myview">我的</a>
+      <a href="#myview/about" class="sub-tab" data-subpage="about" data-i18n="sub.about">版本信息</a>
     </div>
 
     <!-- Page: Overview -->
     <div id="page-overview" class="page active">
+      <section class="hero-shell">
+        <div class="hero-card">
+          <div class="hero-brand">
+            <div class="hero-logo-frame">
+              <img src="assets/the9bit-logo.png" alt="the9bit logo" class="hero-logo hero-logo-full">
+            </div>
+            <div>
+              <div class="hero-kicker" data-i18n="hero.kicker">the9bit AI operations visibility</div>
+              <h2 class="hero-title" data-i18n="hero.title">the9bit AI Bots Dashboard</h2>
+            </div>
+          </div>
+          <p class="hero-copy" data-i18n="hero.copy">Live team health, task movement, GitLab flow, and Connect activity in a branded black-and-orange control surface for the9bit AI bots.</p>
+          <div class="hero-pills">
+            <span class="hero-pill" data-i18n="hero.pill1">Brand-tuned</span>
+            <span class="hero-pill" data-i18n="hero.pill2">Live HXA data</span>
+            <span class="hero-pill" data-i18n="hero.pill3">Railway deployed</span>
+          </div>
+        </div>
+      </section>
+
       <!-- Team Capacity Overview (#45) -->
       <section class="section">
         <div class="section-header">
-          <h2>团队概况</h2>
+          <h2 data-i18n="section.teamOverview">团队概况</h2>
         </div>
         <div id="team-capacity" class="team-capacity-section"></div>
       </section>
@@ -82,7 +115,7 @@
       <!-- Blocker Detection (#56) -->
       <section id="blocker-section" class="section blocker-section hidden">
         <div class="section-header">
-          <h2><span class="blocker-toggle">▾</span> ⚠️ 卡点告警</h2>
+          <h2><span class="blocker-toggle">▾</span> <span data-i18n="section.blockers">⚠️ 卡点告警</span></h2>
           <span id="blocker-count" class="team-stats"></span>
         </div>
         <div id="blocker-definitions" class="blocker-definitions"></div>
@@ -92,7 +125,7 @@
       <!-- Action Suggestions (#57) -->
       <section class="section suggestions-section">
         <div class="section-header">
-          <h2>💡 行动建议</h2>
+          <h2 data-i18n="section.suggestions">💡 行动建议</h2>
         </div>
         <div id="suggestions-list" class="suggestions-list"></div>
       </section>
@@ -100,7 +133,7 @@
       <!-- Team Utilization & Output Metrics (#62) -->
       <section class="section">
         <div class="section-header">
-          <h2>📊 利用率与产出指标</h2>
+          <h2 data-i18n="section.metrics">📊 利用率与产出指标</h2>
         </div>
         <div id="metrics-panel" class="metrics-panel"></div>
       </section>
@@ -108,7 +141,7 @@
       <!-- Team Members (HxA Friendly #58) -->
       <section class="section">
         <div class="section-header">
-          <h2>团队成员</h2>
+          <h2 data-i18n="section.teamMembers">团队成员</h2>
           <div class="section-tools">
             <span id="overview-team-stats" class="team-stats"></span>
             <select id="overview-sort" class="sort-select" title="排序方式">
@@ -119,7 +152,7 @@
             </select>
           </div>
         </div>
-        <p class="section-subtitle">实时显示每位 Agent 的在线状态、当前任务、健康评分和工作负载</p>
+        <p class="section-subtitle" data-i18n="section.teamMembersSubtitle">实时显示每位 Agent 的在线状态、当前任务、健康评分和工作负载</p>
         <div id="overview-agent-cards" class="card-grid"></div>
       </section>
 
@@ -127,19 +160,19 @@
       <div class="bottom-row">
         <section class="section flex-1">
           <div class="section-header">
-            <h2>任务看板</h2>
+            <h2 data-i18n="section.taskBoard">任务看板</h2>
           </div>
           <div id="overview-task-board" class="board">
             <div class="board-col" data-state="todo">
-              <h3>待办 <span class="count" id="overview-todo-count">0</span></h3>
+              <h3><span data-i18n="board.todo">待办</span> <span class="count" id="overview-todo-count">0</span></h3>
               <div class="board-list" id="overview-todo-list"></div>
             </div>
             <div class="board-col" data-state="doing">
-              <h3>进行中 <span class="count" id="overview-doing-count">0</span></h3>
+              <h3><span data-i18n="board.doing">进行中</span> <span class="count" id="overview-doing-count">0</span></h3>
               <div class="board-list" id="overview-doing-list"></div>
             </div>
             <div class="board-col" data-state="done">
-              <h3>已完成 <span class="count" id="overview-done-count">0</span></h3>
+              <h3><span data-i18n="board.done">已完成</span> <span class="count" id="overview-done-count">0</span></h3>
               <div class="board-list" id="overview-done-list"></div>
             </div>
           </div>
@@ -147,7 +180,7 @@
 
         <section class="section flex-1">
           <div class="section-header">
-            <h2>最近活动</h2>
+            <h2 data-i18n="section.recentActivity">最近活动</h2>
           </div>
           <div id="overview-timeline" class="timeline-list"></div>
         </section>
@@ -156,7 +189,7 @@
       <!-- Performance Trends (#47) -->
       <section class="section">
         <div class="section-header">
-          <h2>生产力趋势</h2>
+          <h2 data-i18n="section.productivityTrends">生产力趋势</h2>
           <div class="section-tools">
             <div class="view-toggle">
               <button data-trends-mode="team" class="btn-toggle active">团队</button>
@@ -170,10 +203,10 @@
           </div>
         </div>
         <div class="trends-container">
-          <div class="trends-sublabel">每日完成任务</div>
+          <div class="trends-sublabel" data-i18n="section.dailyCompleted">每日完成任务</div>
           <div id="trends-line-chart" class="trends-chart-area"></div>
           <div id="trends-line-legend" class="trends-legend"></div>
-          <div class="trends-sublabel" style="margin-top:14px">活跃时段热力图</div>
+          <div class="trends-sublabel" style="margin-top:14px" data-i18n="section.activityHeatmap">活跃时段热力图</div>
           <div id="trends-heatmap" class="trends-heatmap-area"></div>
         </div>
       </section>
@@ -181,7 +214,7 @@
       <!-- Collab Graph (mini) -->
       <section class="section">
         <div class="section-header">
-          <h2>协作关系</h2>
+          <h2 data-i18n="section.collaboration">协作关系</h2>
         </div>
         <div class="graph-container" style="height: 300px;">
           <canvas id="overview-collab-canvas"></canvas>

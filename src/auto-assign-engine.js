@@ -23,8 +23,8 @@ let rrIndex = 0;
 const seenUnassigned = new Set();
 
 function init(config, ws) {
-  gitlabConfig = config.gitlab;
-  gitlabGroupId = config.gitlab.group_id;
+  gitlabConfig = config.gitlab || null;
+  gitlabGroupId = config.gitlab?.group_id || null;
   if (ws) wsModule = ws;
   if (config.notifications) {
     notifyConfig = config.notifications;
@@ -218,8 +218,8 @@ async function runOnce() {
 }
 
 function start() {
-  if (!gitlabConfig) {
-    console.error('[AutoAssign] Engine not initialized — call init(config) first');
+  if (!gitlabConfig || !gitlabGroupId) {
+    console.log('[AutoAssign] GitLab not configured — auto-assign engine disabled');
     return;
   }
   console.log('[AutoAssign] Engine started (interval: 5 min, unassigned detection + offline reassign)');

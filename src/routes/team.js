@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const db = require('../db');
 const collab = require('../analyzers/collab');
+const { deriveTierStatus, deriveWorkStatus } = require('../status');
 
 const router = Router();
 
@@ -21,33 +22,35 @@ function buildAgents() {
 
     // Historical stats (#39)
     const now = Date.now();
+    const health = db.getAgentHealth(a.name);
+    const healthReportedAt = health?.reported_at || 0;
 
     // Work status (#135): 4-tier based on git activity + online + tasks
     //   busy: Connect online + git activity within 4h + has open tasks
     //   idle: Connect online + no recent activity OR no open tasks
     //   inactive: Connect online but >24h without git activity
-    //   offline: Connect not online
-    const fourHoursAgo = now - 4 * 3600000;
-    const twentyFourHoursAgo = now - 24 * 3600000;
+    //   offline: Connect not online but we have some signal history
+    //   unknown: no usable status signal received yet
     const latestEventTs = (latestEvent && latestEvent.timestamp) || 0;
-    const hasRecentActivity = latestEventTs > fourHoursAgo;
-    const hasAnyDayActivity = latestEventTs > twentyFourHoursAgo;
-
-    let workStatus;
-    if (!a.online) {
-      workStatus = 'offline';
-    } else if (hasRecentActivity && openTasks.length > 0) {
-      workStatus = 'busy';
-    } else if (!hasAnyDayActivity) {
-      workStatus = 'inactive';
-    } else {
-      workStatus = 'idle';
-    }
+    const workStatus = deriveWorkStatus({
+      online: !!a.online,
+      openTaskCount: openTasks.length,
+      lastSeenAt: a.last_seen_at || 0,
+      chatLastSeenAt: a.chat_last_seen_at || 0,
+      lastEventTs: latestEventTs,
+      healthReportedAt,
+      now,
+    });
 
     // 3-tier status (#136): active (GitLab 30min) / online (Connect online) / offline
-    const thirtyMinAgo = now - 30 * 60 * 1000;
-    const hasRecentGitLab = recentEvents.some(e => e.timestamp && e.timestamp > thirtyMinAgo);
-    const tierStatus = hasRecentGitLab ? 'active' : a.online ? 'online' : 'offline';
+    const tierStatus = deriveTierStatus({
+      online: !!a.online,
+      lastSeenAt: a.last_seen_at || 0,
+      chatLastSeenAt: a.chat_last_seen_at || 0,
+      lastEventTs: latestEventTs,
+      healthReportedAt,
+      now,
+    });
     const sevenDays = now - 7 * 24 * 60 * 60 * 1000;
     const thirtyDays = now - 30 * 24 * 60 * 60 * 1000;
     const closedLast7 = closedTasks.filter(t => t.updated_at > sevenDays).length;
@@ -77,7 +80,18 @@ function buildAgents() {
     const blockingMRs = db.getBlockingMRsForAgent(a.name, now);
 
     // Last active time: most recent event timestamp (#98)
-    const lastActiveAt = latestEvent ? latestEvent.timestamp : (a.last_seen_at || null);
+    const lastActiveAt = Math.max(
+      latestEvent?.timestamp || 0,
+      a.last_seen_at || 0,
+      a.chat_last_seen_at || 0
+    ) || null;
+    const chatActivity = a.chat_last_seen_at ? {
+      source: a.chat_source || 'telegram',
+      last_seen_at: a.chat_last_seen_at,
+      preview: a.chat_last_preview || '',
+      channel: a.chat_last_channel || null,
+      thread_id: a.chat_last_thread_id || null,
+    } : null;
 
     // Activity metrics (#135): events and closed tasks in last 7 days
     const events7d = db.getEventsInWindow(sevenDays, a.name);
@@ -94,6 +108,7 @@ function buildAgents() {
       capacity,
       health_score: healthScore,
       last_active_at: lastActiveAt,
+      chat_activity: chatActivity,
       events_7d: events7d.length,
       closed_7d: closed7d.length,
       blocking_mrs: blockingMRs,
@@ -142,6 +157,7 @@ router.get('/', (req, res) => {
         active: agents.filter(a => a.tier_status === 'active').length,
         online: agents.filter(a => a.tier_status === 'online').length,
         offline: agents.filter(a => a.tier_status === 'offline').length,
+        unknown: agents.filter(a => a.tier_status === 'unknown').length,
       }
     }
   });
@@ -161,6 +177,7 @@ router.get('/:name/output', (req, res) => {
 router.get('/:name', (req, res) => {
   const agent = db.getAgent(req.params.name);
   if (!agent) return res.status(404).json({ error: 'Agent not found' });
+  const enrichedAgent = buildAgents().find(a => a.name === agent.name) || { ...agent, tags: safeJSON(agent.tags), online: !!agent.online };
 
   const tasks = db.getTasksForAgent(agent.name);
   const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -168,7 +185,7 @@ router.get('/:name', (req, res) => {
   const collabs = db.getCollabsForAgent(agent.name);
 
   res.json({
-    agent: { ...agent, tags: safeJSON(agent.tags), online: !!agent.online },
+    agent: enrichedAgent,
     current_tasks: tasks.filter(t => t.state === 'opened'),
     recent_done: tasks.filter(t => t.state === 'closed' || t.state === 'merged').slice(0, 10),
     events,

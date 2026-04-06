@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { deriveWorkStatus } = require('../status');
 
 // ISO week string helper: returns "YYYY-Www"
 function isoWeek(ts) {
@@ -103,13 +104,16 @@ function computeMetrics() {
     // 4-tier status (#135)
     const agentEvents = db.getEventsInWindow(since7d, a.name);
     const latestEvt = agentEvents.length > 0 ? Math.max(...agentEvents.map(e => e.timestamp || 0)) : 0;
-    const hasRecent4h = latestEvt > (now - 4 * 3600000);
-    const hasRecent24h = latestEvt > (now - 24 * 3600000);
-    let status;
-    if (!a.online) status = 'offline';
-    else if (hasRecent4h && openTasks > 0) status = 'busy';
-    else if (!hasRecent24h) status = 'inactive';
-    else status = 'idle';
+    const health = db.getAgentHealth(a.name);
+    const status = deriveWorkStatus({
+      online: !!a.online,
+      openTaskCount: openTasks,
+      lastSeenAt: a.last_seen_at || 0,
+      chatLastSeenAt: a.chat_last_seen_at || 0,
+      lastEventTs: latestEvt,
+      healthReportedAt: health?.reported_at || 0,
+      now,
+    });
 
     return {
       name: a.name,

@@ -9,7 +9,29 @@ const store = {
 
 // Agent operations
 const upsertAgent = (agent) => {
-  store.agents.set(agent.name, { ...agent });
+  const prev = store.agents.get(agent.name) || {};
+  const merged = {
+    ...prev,
+    ...agent,
+  };
+
+  if (prev.last_seen_at || agent.last_seen_at) {
+    merged.last_seen_at = Math.max(prev.last_seen_at || 0, agent.last_seen_at || 0) || null;
+  }
+  if (prev.chat_last_seen_at || agent.chat_last_seen_at) {
+    merged.chat_last_seen_at = Math.max(prev.chat_last_seen_at || 0, agent.chat_last_seen_at || 0) || null;
+  }
+  if ((agent.chat_last_seen_at || 0) >= (prev.chat_last_seen_at || 0)) {
+    merged.chat_source = agent.chat_source || prev.chat_source || null;
+    merged.chat_last_preview = agent.chat_last_preview || prev.chat_last_preview || null;
+    merged.chat_last_channel = agent.chat_last_channel || prev.chat_last_channel || null;
+    merged.chat_last_thread_id = agent.chat_last_thread_id || prev.chat_last_thread_id || null;
+  }
+  if (prev.updated_at || agent.updated_at) {
+    merged.updated_at = Math.max(prev.updated_at || 0, agent.updated_at || 0) || null;
+  }
+
+  store.agents.set(agent.name, merged);
 };
 
 const getAllAgents = () => {
@@ -236,7 +258,10 @@ const getAgentStats = () => {
       name: agent.name,
       online: agent.online,
       last_seen_at: agent.last_seen_at,
-      last_active: lastEvent?.timestamp || null,
+      chat_last_seen_at: agent.chat_last_seen_at || null,
+      chat_source: agent.chat_source || null,
+      chat_last_preview: agent.chat_last_preview || null,
+      last_active: Math.max(lastEvent?.timestamp || 0, agent.last_seen_at || 0, agent.chat_last_seen_at || 0) || null,
       open_tasks: agentTasks.filter(t => t.state === 'opened').length,
       closed_tasks: agentTasks.filter(t => t.state === 'closed' || t.state === 'merged').length,
       mr_count: agentTasks.filter(t => t.type === 'mr').length,
@@ -320,13 +345,21 @@ const getStaleMRs = (now, thresholdMs) => {
     .sort((a, b) => b.stale_minutes - a.stale_minutes);
 };
 
-// Idle agents: offline agents not seen for more than thresholdMs
+// Idle agents: agents with no fresh status signal for more than thresholdMs
 const getIdleAgents = (now, thresholdMs) => {
   return [...store.agents.values()]
-    .filter(a => !a.online && a.last_seen_at && (now - a.last_seen_at) > thresholdMs)
+    .map(a => {
+      const lastSignalAt = Math.max(a.last_seen_at || 0, a.chat_last_seen_at || 0) || 0;
+      return {
+        name: a.name,
+        last_signal_at: lastSignalAt,
+        last_seen_hours: lastSignalAt ? Math.floor((now - lastSignalAt) / 3600000) : null,
+      };
+    })
+    .filter(a => a.last_signal_at && (now - a.last_signal_at) > thresholdMs)
     .map(a => ({
       name: a.name,
-      last_seen_hours: Math.floor((now - a.last_seen_at) / 3600000),
+      last_seen_hours: a.last_seen_hours,
     }))
     .sort((a, b) => b.last_seen_hours - a.last_seen_hours);
 };

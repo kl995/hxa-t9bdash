@@ -7,6 +7,7 @@ const os = require('os');
 const http = require('http');
 const https = require('https');
 const db = require('../db');
+const { deriveTierStatus, hasFreshStatusSignal } = require('../status');
 
 function getLocalSystem() {
   const totalMem = os.totalmem();
@@ -113,31 +114,44 @@ function getAgentHealth() {
   const agents = db.getAllAgents();
   const allSystemHealth = db.getAllAgentHealth();
   const now = Date.now();
-  const fiveMinAgo = now - 5 * 60 * 1000;
-  const thirtyMinAgo = now - 30 * 60 * 1000;
   const STALE_MS = 10 * 60 * 1000;
 
   return agents.map(agent => {
     const events = db.getEventsForAgent(agent.name, 1);
     const lastEvent = events[0] || null;
     const lastActive = lastEvent?.timestamp || agent.last_seen_at || null;
+    const sysHealth = allSystemHealth[agent.name] || null;
+    const healthReportedAt = sysHealth?.reported_at || 0;
 
     let activityStatus = 'unknown';
     if (agent.online) {
-      activityStatus = lastActive && lastActive > fiveMinAgo ? 'active' : 'idle';
+      activityStatus = lastActive && lastActive > (now - 5 * 60 * 1000) ? 'active' : 'idle';
     } else {
-      activityStatus = lastActive && lastActive > thirtyMinAgo ? 'recently_seen' : 'offline';
+      activityStatus = hasFreshStatusSignal({
+        lastSeenAt: agent.last_seen_at || 0,
+        chatLastSeenAt: agent.chat_last_seen_at || 0,
+        lastEventTs: lastEvent?.timestamp || 0,
+        healthReportedAt,
+        now,
+      })
+        ? 'recently_seen'
+        : 'unknown';
     }
 
     // 3-tier status (#136): active (GitLab 30min) / online (Connect) / offline
-    const hasRecentGitLab = lastEvent && lastEvent.timestamp > thirtyMinAgo;
-    const tierStatus = hasRecentGitLab ? 'active' : agent.online ? 'online' : 'offline';
+    const tierStatus = deriveTierStatus({
+      online: !!agent.online,
+      lastSeenAt: agent.last_seen_at || 0,
+      chatLastSeenAt: agent.chat_last_seen_at || 0,
+      lastEventTs: lastEvent?.timestamp || 0,
+      healthReportedAt,
+      now,
+    });
 
     const tasks = db.getTasksForAgent(agent.name, { assigneeOnly: true });
     const openTasks = tasks.filter(t => t.state === 'opened').length;
 
     // System health (#115)
-    const sysHealth = allSystemHealth[agent.name] || null;
     const sysStale = sysHealth ? (now - sysHealth.reported_at > STALE_MS) : true;
 
     return {

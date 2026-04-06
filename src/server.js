@@ -8,6 +8,7 @@ const db = require('./db');
 const ws = require('./ws');
 const connectFetcher = require('./fetchers/connect');
 const gitlabFetcher = require('./fetchers/gitlab');
+const telegramActivityFetcher = require('./fetchers/telegram-activity');
 const collab = require('./analyzers/collab');
 
 const teamRoutes = require('./routes/team');
@@ -32,21 +33,23 @@ const liveRoutes = require('./routes/live');
 const pipelineRoutes = require('./routes/pipeline');
 const mrBoardRoutes = require('./routes/mr-board');
 const projectRoutes = require('./routes/projects');
+const telegramActivityRoutes = require('./routes/telegram-activity');
 const { buildProjects } = projectRoutes;
 const overviewRoutes = require('./routes/overview');
 const agentHealthRoutes = require('./routes/agent-health');
 const healthWatchdog = require('./health-watchdog');
 const pm2Routes = require('./routes/pm2-services');
+const { loadConfig } = require('./config-loader');
 
 const PORT = process.env.PORT || 3479;
 
 // Load config
-const configPath = path.join(__dirname, '..', 'config', 'sources.json');
-if (!fs.existsSync(configPath)) {
-  console.error('config/sources.json not found');
+const { config, source: configSource } = loadConfig();
+if (!config) {
+  console.error('HxA Dash config not found. Provide config/sources.json or Railway env vars (for example HXA_CONFIG_JSON, or HXA_CONNECT_* + HXA_GITLAB_*).');
   process.exit(1);
 }
-const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+console.log(`[HxA Dash] Loaded config from ${configSource}`);
 
 // Init entity layer
 const entity = require('./entity');
@@ -98,6 +101,7 @@ const scopeFetchers = scopes.map(s => ({
 // Init default module-level fetchers (backward compat for routes)
 connectFetcher.init(config);
 gitlabFetcher.init(config);
+telegramActivityFetcher.init(config);
 
 // Auto-assign engine initialized in startPolling() with ws reference
 
@@ -113,6 +117,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // API routes
 app.use('/api/team', teamRoutes);
+app.use('/api/telegram-activity', telegramActivityRoutes);
 app.use('/api/board', boardRoutes);
 app.use('/api/timeline', timelineRoutes);
 app.use('/api/stats', statsRoutes);
@@ -170,6 +175,9 @@ app.get('/api/about', (req, res) => {
 app.get('/api/health', (req, res) => {
   const agents = db.getAllAgents();
   const tasks = db.getAllTasks();
+  const gitlabSourceCount = Array.isArray(config.scopes) && config.scopes.length > 0
+    ? config.scopes.filter(s => s.gitlab?.url && s.gitlab?.token && s.gitlab?.group_id).length
+    : (config.gitlab?.url && config.gitlab?.token && config.gitlab?.group_id ? 1 : 0);
   res.json({
     status: 'ok',
     uptime_seconds: Math.floor(process.uptime()),
@@ -179,7 +187,7 @@ app.get('/api/health', (req, res) => {
       agents_loaded: agents.length,
       tasks_loaded: tasks.length,
       events_in_store: db.getTimeline(1000).length,
-      gitlab_sources: config.gitlab?.projects?.length || 0,
+      gitlab_sources: gitlabSourceCount,
     },
   });
 });
@@ -244,6 +252,7 @@ async function pollAll() {
       await sf.connect.fetchAgents();
       await sf.gitlab.fetchAll();
     }));
+    await telegramActivityFetcher.pollActivity();
     const agents = db.getAllAgents();
 
     // Analyze collaboration
@@ -300,6 +309,7 @@ async function startPolling() {
   // Connect polling (30s) — all scopes in parallel (#100)
   setInterval(async () => {
     await Promise.all(scopeFetchers.map(sf => sf.connect.fetchAgents()));
+    await telegramActivityFetcher.pollActivity();
     ws.broadcast('team:update', buildAgents());
   }, config.polling?.connect_interval_ms || 30000);
 

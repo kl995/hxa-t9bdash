@@ -7,16 +7,18 @@
 const { Router } = require('express');
 const https = require('https');
 const http = require('http');
-const path = require('path');
-const fs = require('fs');
 const db = require('../db');
 const skillMatcher = require('../skill-matcher');
+const { loadConfig } = require('../config-loader');
 
 const router = Router();
 
-// Load GitLab config once
-const configPath = path.join(__dirname, '..', '..', 'config', 'sources.json');
-const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+// Load GitLab config once through the shared loader so Railway env-based
+// deployments work without requiring a checked-in config/sources.json.
+const { config } = loadConfig();
+if (!config?.gitlab?.url || !config?.gitlab?.token) {
+  throw new Error('Auto-assign requires GitLab config via config/sources.json or HXA_* environment variables');
+}
 const gitlabConfig = config.gitlab;
 
 // GitLab API helper (PUT / POST with body)

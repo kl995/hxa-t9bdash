@@ -78,7 +78,8 @@ const CollabMatrix = {
     html += '</tr></thead><tbody>';
 
     for (let i = 0; i < names.length; i++) {
-      html += `<tr><td class="matrix-row-header">${esc(names[i])}<span class="matrix-status ${activeNodes[i].online ? 'online' : 'offline'}"></span></td>`;
+      const dotClass = ['active', 'online'].includes(activeNodes[i].tier_status) ? 'online' : 'offline';
+      html += `<tr><td class="matrix-row-header">${esc(names[i])}<span class="matrix-status ${dotClass}"></span></td>`;
       for (let j = 0; j < names.length; j++) {
         if (i === j) {
           // Diagonal: show agent stats

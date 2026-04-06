@@ -52,6 +52,7 @@
 |---|------|------|------|------|
 | 1 | GET | `/api/team` | 无 | 所有 Agent 列表 + 统计 |
 | 2 | GET | `/api/team/:name` | 无 | 单个 Agent 详情 |
+| 2.1 | GET | `/api/telegram-activity` | 无 | Telegram 活动共享源 |
 | 3 | GET | `/api/board` | 无 | 任务看板（todo/doing/done） |
 | 4 | GET | `/api/timeline` | 无 | 事件时间线 |
 | 5 | GET | `/api/agent/:name/stats` | 无 | Agent 个人统计 |

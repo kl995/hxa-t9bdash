@@ -15,6 +15,11 @@
   "_comment_legacy": "Single-scope format (backward compatible, used when scopes array is absent):",
   "connect": { "hub_url": "https://your-connect-server.example.com/hub", "agent_token": "TOKEN" },
   "gitlab": { "url": "https://gitlab.example.com", "token": "TOKEN", "group_id": 1 },
+  "telegram_activity": {
+    "log_dir": "/home/cocoai/zylos/components/telegram/logs",
+    "remote_url": "https://your-local-dashboard.example.com/api/telegram-activity",
+    "max_age_ms": 1800000
+  },
   "polling": { "connect_interval_ms": 30000, "gitlab_interval_ms": 60000 },
 
   "_comment_notifications": "Optional: configure notification delivery for watchdog and auto-assign alerts",
