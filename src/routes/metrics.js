@@ -110,6 +110,7 @@ function computeMetrics() {
       openTaskCount: openTasks,
       lastSeenAt: a.last_seen_at || 0,
       chatLastSeenAt: a.chat_last_seen_at || 0,
+      chatSource: a.chat_source || '',
       lastEventTs: latestEvt,
       healthReportedAt: health?.reported_at || 0,
       now,

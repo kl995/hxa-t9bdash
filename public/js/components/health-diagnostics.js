@@ -10,7 +10,7 @@ const HealthDiagnostics = {
 
   async fetch() {
     try {
-      const r = await fetch(`${BASE}/api/diagnostics`);
+      const r = await fetch(apiUrl(`${BASE}/api/diagnostics`));
       if (!r.ok) return;
       this._data = await r.json();
       this.render();

@@ -9,7 +9,7 @@ const LiveDashboard = {
 
   async fetch() {
     try {
-      const res = await fetch(`${BASE}/api/live`);
+      const res = await fetch(apiUrl(`${BASE}/api/live`));
       if (!res.ok) return;
       const data = await res.json();
       this._data = data;

@@ -8,6 +8,7 @@ const http = require('http');
 const https = require('https');
 const db = require('../db');
 const { deriveTierStatus, hasFreshStatusSignal } = require('../status');
+const { isHealthyMockup, applyHealthyMockupToDiagnostics } = require('../mockup');
 
 function getLocalSystem() {
   const totalMem = os.totalmem();
@@ -143,6 +144,7 @@ function getAgentHealth() {
       online: !!agent.online,
       lastSeenAt: agent.last_seen_at || 0,
       chatLastSeenAt: agent.chat_last_seen_at || 0,
+      chatSource: agent.chat_source || '',
       lastEventTs: lastEvent?.timestamp || 0,
       healthReportedAt,
       now,
@@ -193,7 +195,7 @@ router.get('/', async (req, res) => {
       : allStatuses.includes('error') ? 'warning'
       : allStatuses.includes('warning') ? 'warning' : 'ok';
 
-    res.json({
+    const payload = {
       timestamp: now,
       overall: overallStatus,
       uptime_seconds: Math.floor(process.uptime()),
@@ -215,7 +217,9 @@ router.get('/', async (req, res) => {
         total: agentTotal,
         list: agentHealth,
       },
-    });
+    };
+
+    res.json(isHealthyMockup(req) ? applyHealthyMockupToDiagnostics(payload) : payload);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -95,6 +95,12 @@ function formatTime(ts) {
   return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function apiUrl(path) {
+  const params = new URLSearchParams(location.search);
+  const query = params.toString();
+  return query ? `${path}${path.includes('?') ? '&' : '?'}${query}` : path;
+}
+
 const I18n = {
   STORAGE_KEY: 'the9bit-dashboard-language',
   current: 'en',
@@ -311,7 +317,7 @@ const ScopeManager = {
 
   async init() {
     try {
-      const res = await fetch(`${BASE}/api/scopes`);
+      const res = await fetch(apiUrl(`${BASE}/api/scopes`));
       if (!res.ok) return;
       const data = await res.json();
       this.scopes = data.scopes || [];
@@ -625,10 +631,10 @@ const App = {
     Progress.show();
     try {
       const [teamRes, boardRes, timelineRes, graphRes] = await Promise.all([
-        fetch(`${BASE}/api/team`),
-        fetch(`${BASE}/api/board`),
-        fetch(`${BASE}/api/timeline`),
-        fetch(`${BASE}/api/graph`)
+        fetch(apiUrl(`${BASE}/api/team`)),
+        fetch(apiUrl(`${BASE}/api/board`)),
+        fetch(apiUrl(`${BASE}/api/timeline`)),
+        fetch(apiUrl(`${BASE}/api/graph`))
       ]);
 
       if (teamRes.ok) {
@@ -652,7 +658,7 @@ const App = {
 
       // Fetch project list
       try {
-        const projRes = await fetch(`${BASE}/api/projects`);
+        const projRes = await fetch(apiUrl(`${BASE}/api/projects`));
         if (projRes.ok) {
           const projData = await projRes.json();
           this.data.projects = projData.projects || [];
@@ -802,7 +808,7 @@ const App = {
   // Blocker detection — try API first, fallback to local computation (#56, #63, #68)
   async _renderBlockers(agents) {
     try {
-      const res = await fetch(`${BASE}/api/blockers`);
+      const res = await fetch(apiUrl(`${BASE}/api/blockers`));
       if (res.ok) {
         const data = await res.json();
         Blockers.render(data.blockers || [], data.thresholds);
@@ -1155,7 +1161,7 @@ const App = {
   // --- #108, #133: About / Version info page ---
   async loadAbout() {
     try {
-      const res = await fetch(`${BASE}/api/about`);
+      const res = await fetch(apiUrl(`${BASE}/api/about`));
       if (!res.ok) return;
       const info = await res.json();
       const el = (id) => document.getElementById(id);

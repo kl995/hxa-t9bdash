@@ -60,6 +60,28 @@ function trackActivity(latestByAgent, name, activity) {
   }
 }
 
+function findAddressedAgents(text) {
+  if (!text) return [];
+
+  const targets = new Set();
+  const raw = String(text);
+
+  for (const match of raw.matchAll(/(^|[\s(])@([A-Za-z0-9_]{3,})\b/g)) {
+    const handle = match[2];
+    const canonicalName =
+      entity.resolve('telegram', handle) ||
+      entity.resolve('connect', handle) ||
+      handle;
+    const knownAgent = db.getAgent(canonicalName) || db.getAgent(handle);
+    const knownEntity = entity.get(canonicalName);
+    if (knownAgent || knownEntity) {
+      targets.add(canonicalName);
+    }
+  }
+
+  return [...targets];
+}
+
 function collectLocalActivity(latestByAgent, { logDir = DEFAULT_LOG_DIR, maxAgeMs, now }) {
   if (!fs.existsSync(logDir)) return;
 
@@ -84,28 +106,42 @@ function collectLocalActivity(latestByAgent, { logDir = DEFAULT_LOG_DIR, maxAgeM
         continue;
       }
 
-      if (msg.user_id !== 'bot') continue;
-      if (!msg.user_name) continue;
-
       const rawName = String(msg.user_name).replace(/^@/, '').trim();
-      if (!rawName) continue;
-
-      const canonicalName = entity.resolve('telegram', rawName) || rawName;
-      const knownAgent = db.getAgent(canonicalName) || db.getAgent(rawName);
-      const knownEntity = entity.get(canonicalName);
-      if (!knownAgent && !knownEntity) continue;
 
       const ts = Date.parse(msg.timestamp || '');
       if (!ts || Number.isNaN(ts)) continue;
       if ((now - ts) > maxAgeMs) continue;
 
-      trackActivity(latestByAgent, canonicalName, {
-        ts,
-        source: 'telegram',
-        preview: buildPreview(msg.text),
-        channel: path.basename(filePath, '.log'),
-        threadId: msg.thread_id || null,
-      });
+      const channel = path.basename(filePath, '.log');
+      const preview = buildPreview(msg.text);
+
+      if (msg.user_id === 'bot') {
+        if (!rawName) continue;
+
+        const canonicalName = entity.resolve('telegram', rawName) || rawName;
+        const knownAgent = db.getAgent(canonicalName) || db.getAgent(rawName);
+        const knownEntity = entity.get(canonicalName);
+        if (!knownAgent && !knownEntity) continue;
+
+        trackActivity(latestByAgent, canonicalName, {
+          ts,
+          source: 'telegram',
+          preview,
+          channel,
+          threadId: msg.thread_id || null,
+        });
+        continue;
+      }
+
+      for (const canonicalName of findAddressedAgents(msg.text)) {
+        trackActivity(latestByAgent, canonicalName, {
+          ts,
+          source: 'telegram-mention',
+          preview,
+          channel,
+          threadId: msg.thread_id || null,
+        });
+      }
     }
   }
 }

@@ -2,6 +2,7 @@ const { Router } = require('express');
 const db = require('../db');
 const collab = require('../analyzers/collab');
 const { deriveTierStatus, deriveWorkStatus } = require('../status');
+const { isHealthyMockup, applyHealthyMockupToTeam } = require('../mockup');
 
 const router = Router();
 
@@ -25,28 +26,25 @@ function buildAgents() {
     const health = db.getAgentHealth(a.name);
     const healthReportedAt = health?.reported_at || 0;
 
-    // Work status (#135): 4-tier based on git activity + online + tasks
-    //   busy: Connect online + git activity within 4h + has open tasks
-    //   idle: Connect online + no recent activity OR no open tasks
-    //   inactive: Connect online but >24h without git activity
-    //   offline: Connect not online but we have some signal history
-    //   unknown: no usable status signal received yet
+    // Work status is derived from Telegram activity only.
     const latestEventTs = (latestEvent && latestEvent.timestamp) || 0;
     const workStatus = deriveWorkStatus({
       online: !!a.online,
       openTaskCount: openTasks.length,
       lastSeenAt: a.last_seen_at || 0,
       chatLastSeenAt: a.chat_last_seen_at || 0,
+      chatSource: a.chat_source || '',
       lastEventTs: latestEventTs,
       healthReportedAt,
       now,
     });
 
-    // 3-tier status (#136): active (GitLab 30min) / online (Connect online) / offline
+    // 3-tier status is derived from Telegram activity only.
     const tierStatus = deriveTierStatus({
       online: !!a.online,
       lastSeenAt: a.last_seen_at || 0,
       chatLastSeenAt: a.chat_last_seen_at || 0,
+      chatSource: a.chat_source || '',
       lastEventTs: latestEventTs,
       healthReportedAt,
       now,
@@ -79,12 +77,8 @@ function buildAgents() {
     // Blocking MRs: open MRs stale > 15 min (agent-scale SLA) (#98)
     const blockingMRs = db.getBlockingMRsForAgent(a.name, now);
 
-    // Last active time: most recent event timestamp (#98)
-    const lastActiveAt = Math.max(
-      latestEvent?.timestamp || 0,
-      a.last_seen_at || 0,
-      a.chat_last_seen_at || 0
-    ) || null;
+    // Last active time for the card wall follows the Telegram activity signal.
+    const lastActiveAt = a.chat_last_seen_at || null;
     const chatActivity = a.chat_last_seen_at ? {
       source: a.chat_source || 'telegram',
       last_seen_at: a.chat_last_seen_at,
@@ -145,9 +139,8 @@ function buildAgents() {
 // GET /api/team — all agents + stats
 router.get('/', (req, res) => {
   const agents = buildAgents();
-
   const online = agents.filter(a => a.online).length;
-  res.json({
+  const payload = {
     agents,
     stats: {
       total: agents.length,
@@ -160,7 +153,9 @@ router.get('/', (req, res) => {
         unknown: agents.filter(a => a.tier_status === 'unknown').length,
       }
     }
-  });
+  };
+
+  res.json(isHealthyMockup(req) ? applyHealthyMockupToTeam(payload) : payload);
 });
 
 // GET /api/team/:name/output — per-agent daily output time-series (#127)

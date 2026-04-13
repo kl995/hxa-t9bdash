@@ -18,7 +18,8 @@
       "role": "Operations Coordinator",
       "bio": "Primary owner-facing bot for execution, reporting, and cross-task coordination",
       "identities": {
-        "connect": "the9bit_cocobot"
+        "connect": "the9bit_cocobot",
+        "telegram": "the9bit_cocobot"
       },
       "skills": ["ops", "reporting", "coordination"]
     },
@@ -29,7 +30,8 @@
       "bio": "Marketing planning, campaigns, and content coordination",
       "identities": {
         "connect": "t9b_marketingbot",
-        "gitlab": "marketing371"
+        "gitlab": "marketing371",
+        "telegram": "t9b_marketingbot"
       },
       "skills": ["marketing", "content", "growth"]
     },
@@ -39,7 +41,8 @@
       "role": "AIGD",
       "bio": "AIGD workflow and creative task support",
       "identities": {
-        "connect": "t9b_aigdbot"
+        "connect": "t9b_aigdbot",
+        "telegram": "t9b_aigdbot"
       },
       "skills": ["aigd", "creative", "research"]
     },
@@ -49,7 +52,8 @@
       "role": "Chat Support",
       "bio": "General conversation and user-facing interaction bot",
       "identities": {
-        "connect": "the9bit_chatbot"
+        "connect": "the9bit_chatbot",
+        "telegram": "the9bit_chatbot"
       },
       "skills": ["chat", "support", "engagement"]
     },
@@ -59,7 +63,8 @@
       "role": "Dashboard",
       "bio": "HXA dashboard service for team visibility",
       "identities": {
-        "connect": "the9bit_hxadash"
+        "connect": "the9bit_hxadash",
+        "telegram": "the9bit_hxadash"
       },
       "skills": ["dashboard", "visibility", "monitoring"]
     }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 const status = await import('../src/status.js').then(m => m.default || m);
 
 describe('status signal freshness', () => {
-  it('treats stale offline agents as unknown when there is no recent signal', () => {
+  it('treats agents with no recent Telegram signal as unknown', () => {
     const now = Date.UTC(2026, 3, 6, 8, 0, 0);
     const staleSeen = now - (3 * 60 * 60 * 1000);
 
@@ -24,21 +24,21 @@ describe('status signal freshness', () => {
     })).toBe('unknown');
   });
 
-  it('keeps recent offline agents classified as offline', () => {
+  it('does not use recent console presence to classify Telegram status', () => {
     const now = Date.UTC(2026, 3, 6, 8, 0, 0);
     const recentSeen = now - (20 * 60 * 1000);
 
     expect(status.deriveWorkStatus({
-      online: false,
+      online: true,
       lastSeenAt: recentSeen,
       now,
-    })).toBe('offline');
+    })).toBe('unknown');
 
     expect(status.deriveTierStatus({
-      online: false,
+      online: true,
       lastSeenAt: recentSeen,
       now,
-    })).toBe('offline');
+    })).toBe('unknown');
   });
 
   it('uses only fresh health reports as offline evidence', () => {
@@ -59,22 +59,16 @@ describe('status signal freshness', () => {
     })).toBe(false);
   });
 
-  it('preserves busy and inactive states for online agents', () => {
+  it('marks Telegram-active agents with open tasks as busy', () => {
     const now = Date.UTC(2026, 3, 6, 8, 0, 0);
+    const recentReply = now - (10 * 60 * 1000);
 
     expect(status.deriveWorkStatus({
-      online: true,
       openTaskCount: 2,
-      lastEventTs: now - (30 * 60 * 1000),
+      chatLastSeenAt: recentReply,
+      chatSource: 'telegram',
       now,
     })).toBe('busy');
-
-    expect(status.deriveWorkStatus({
-      online: true,
-      openTaskCount: 0,
-      lastEventTs: now - (30 * 60 * 60 * 1000),
-      now,
-    })).toBe('inactive');
   });
 
   it('treats fresh Telegram activity as an active signal', () => {
@@ -85,6 +79,7 @@ describe('status signal freshness', () => {
       online: false,
       openTaskCount: 0,
       chatLastSeenAt: recentChat,
+      chatSource: 'telegram',
       lastEventTs: 0,
       now,
     })).toBe('idle');
@@ -92,8 +87,50 @@ describe('status signal freshness', () => {
     expect(status.deriveTierStatus({
       online: false,
       chatLastSeenAt: recentChat,
+      chatSource: 'telegram',
       lastEventTs: 0,
       now,
     })).toBe('active');
+  });
+
+  it('treats Telegram mentions as weaker online signals than actual bot replies', () => {
+    const now = Date.UTC(2026, 3, 6, 8, 0, 0);
+    const recentMention = now - (10 * 60 * 1000);
+
+    expect(status.deriveWorkStatus({
+      online: false,
+      openTaskCount: 0,
+      chatLastSeenAt: recentMention,
+      chatSource: 'telegram-mention',
+      lastEventTs: 0,
+      now,
+    })).toBe('idle');
+
+    expect(status.deriveTierStatus({
+      online: false,
+      chatLastSeenAt: recentMention,
+      chatSource: 'telegram-mention',
+      lastEventTs: 0,
+      now,
+    })).toBe('online');
+  });
+
+  it('keeps older Telegram replies online before they fall back to unknown', () => {
+    const now = Date.UTC(2026, 3, 6, 8, 0, 0);
+    const olderReply = now - (90 * 60 * 1000);
+
+    expect(status.deriveWorkStatus({
+      online: false,
+      chatLastSeenAt: olderReply,
+      chatSource: 'telegram',
+      now,
+    })).toBe('idle');
+
+    expect(status.deriveTierStatus({
+      online: false,
+      chatLastSeenAt: olderReply,
+      chatSource: 'telegram',
+      now,
+    })).toBe('online');
   });
 });

@@ -117,8 +117,6 @@ const CardWall = {
     const latestEvent = agent.latest_event;
     const tierStatus = agent.tier_status || (agent.online ? 'online' : 'offline');
     const onlineClass = tierStatus === 'active' || tierStatus === 'online' ? 'online' : 'offline';
-    const lastSeen = agent.last_seen_at ? timeAgo(agent.last_seen_at) : '';
-
     // Identity badge (HxA Friendly #58: Human/Agent parity, subtle label)
     const kind = agent.kind || 'agent'; // 'human' | 'agent'
     const kindBadge = kind === 'human'
@@ -145,9 +143,7 @@ const CardWall = {
     const lastActiveAt = agent.last_active_at;
     const lastActiveHTML = lastActiveAt
       ? `<div class="card-last-active">${I18n.current === 'zh' ? '最后活跃' : 'Last active'}: ${timeAgo(lastActiveAt)}</div>`
-      : ((tierStatus === 'offline' || tierStatus === 'unknown') && lastSeen)
-        ? `<div class="card-last-active">${I18n.current === 'zh' ? '最后活跃' : 'Last active'}: ${lastSeen}</div>`
-        : '';
+      : '';
     const chatActivity = agent.chat_activity;
     const chatActivityHTML = chatActivity
       ? `<div class="card-chat-activity">

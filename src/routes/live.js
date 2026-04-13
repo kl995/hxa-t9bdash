@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const db = require('../db');
 const { deriveTierStatus, deriveWorkStatus } = require('../status');
+const { isHealthyMockup, applyHealthyMockupToLive } = require('../mockup');
 
 const router = Router();
 
@@ -29,11 +30,7 @@ router.get('/', (req, res) => {
       channel: a.chat_last_channel || null,
       thread_id: a.chat_last_thread_id || null,
     } : null;
-    const lastActivityTs = Math.max(
-      lastEvent?.timestamp || 0,
-      a.last_seen_at || 0,
-      a.chat_last_seen_at || 0
-    ) || 0;
+    const lastActivityTs = a.chat_last_seen_at || 0;
     const lastActiveMs = lastActivityTs ? (now - lastActivityTs) : null;
     const health = db.getAgentHealth(name);
     const healthReportedAt = health?.reported_at || 0;
@@ -42,6 +39,7 @@ router.get('/', (req, res) => {
       openTaskCount: openTasks.length,
       lastSeenAt: a.last_seen_at || 0,
       chatLastSeenAt: a.chat_last_seen_at || 0,
+      chatSource: a.chat_source || '',
       lastEventTs: lastEvent?.timestamp || 0,
       healthReportedAt,
       now,
@@ -52,6 +50,7 @@ router.get('/', (req, res) => {
       online: !!a.online,
       lastSeenAt: a.last_seen_at || 0,
       chatLastSeenAt: a.chat_last_seen_at || 0,
+      chatSource: a.chat_source || '',
       lastEventTs: lastEvent?.timestamp || 0,
       healthReportedAt,
       now,
@@ -113,7 +112,8 @@ router.get('/', (req, res) => {
     }
   };
 
-  res.json({ agents: liveAgents, summary, timestamp: now });
+  const payload = { agents: liveAgents, summary, timestamp: now };
+  res.json(isHealthyMockup(req) ? applyHealthyMockupToLive(payload) : payload);
 });
 
 module.exports = router;

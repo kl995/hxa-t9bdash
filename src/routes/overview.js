@@ -83,6 +83,7 @@ function buildOverview() {
       openTaskCount: myTasks.length,
       lastSeenAt: a.last_seen_at || 0,
       chatLastSeenAt: a.chat_last_seen_at || 0,
+      chatSource: a.chat_source || '',
       lastEventTs: lastActive || 0,
       healthReportedAt: health?.reported_at || 0,
       now,
